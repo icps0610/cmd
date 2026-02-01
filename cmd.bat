@@ -32,7 +32,9 @@ powershell -Command "Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\Cur
 
 :: 關閉顯示最近新增的應用程式/顯示最常用應用程式/顯示最近開啟的項目
 :: 個人化/開始
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f & reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f & reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f 
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f 
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f
 
 :: 開啟副檔名及隱藏檔案
 :: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f 
