@@ -17,7 +17,7 @@ reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" /v Fli
 :: 關閉搜尋
 sc stop "WSearch" & sc config "WSearch" start= disabled
 
-:: 關閉UAC
+:: 關閉 UAC
 reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f
 
 :: 停用 Windows 11 右鍵選單的新樣式，恢復舊版右鍵選單
@@ -45,12 +45,22 @@ reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Start" /v HideRecentlyAd
 :: 恢復副檔名
 :: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f
 
-:: 移除 MicrosoftTeams
-powershell -Command "Get-AppxPackage -Name MicrosoftTeams | Remove-AppxPackage; Get-AppxPackage -Name MSTeams | Remove-AppxPackage; Get-AppxProvisionedPackage -Online | Where-Object {$_.PackageName -like '*Teams*'} | Remove-AppxProvisionedPackage -Online"
+:: 移除 Acer 程式
+winget uninstall --name "Acer Product Registration"
+winget uninstall --name "Acer Configuration Manager"
+winget uninstall --name "ControlCenter Service"
 
-:: 移除 onedrive
-taskkill /f /im OneDrive.exe
-%SystemRoot%\SysWOW64\OneDriveSetup.exe /uninstall
+:: 微軟 Office
+winget uninstall --name "Microsoft 365 - zh-tw"
+powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"
+
+:: 微軟程式
+winget uninstall --name "Microsoft OneNote - zh-tw"
+winget uninstall --name "Microsoft OneDrive"
+winget uninstall --name "Microsoft Teams"
+winget uninstall --name "Copilot"
+winget uninstall --name "Dropbox 優惠方案"
+
 
 :: 重設
 taskkill /f /im explorer.exe & explorer
@@ -68,8 +78,9 @@ start ms-settings:regionlanguage
 pause
 
 :: 啟動
-powershell "irm https://get.activated.win | iex"
-pause
+:: powershell "irm https://get.activated.win | iex"
 
 :: 準備sysprep (不能先安裝LINE )
-C:\Windows\System32\Sysprep\sysprep.exe /generalize /oobe /shutdown 
+
+pause
+:: C:\Windows\System32\Sysprep\sysprep.exe /generalize /oobe /shutdown 
