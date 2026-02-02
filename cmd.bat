@@ -77,12 +77,14 @@ pause
 
 start ms-settings:regionlanguage
 
+:: 設定權限
+icacls "C:\test" /grant Everyone:(OI)(CI)F /T
+
 pause
 
 :: 啟動
 :: powershell "irm https://get.activated.win | iex"
 
-:: 準備sysprep (不能先安裝LINE )
-
 pause
+:: 準備sysprep (不能先安裝LINE )
 :: C:\Windows\System32\Sysprep\sysprep.exe /generalize /oobe /shutdown 
