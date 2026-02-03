@@ -135,12 +135,7 @@
 
     <script>
         const commands = [
-            { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
-            { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
-            { title: "清除 Windows Update 快取", code: `rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution` },
-            { title: "關閉更新服務", code: `sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled` },
-            { title: "關閉更新 (登錄檔)", code: `REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f` },
-            { title: "移除更新設定", code: `REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f` },
+            { title: "啟動", code: `powershell "irm https://get.activated.win | iex"` },
             { title: "更新延長 (36500天)", code: `reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxDays /t REG_DWORD /d 36500 /f` },
             { title: "關閉搜尋", code: `sc stop "WSearch" & sc config "WSearch" start= disabled` },
             { title: "關閉 UAC", code: `reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA /t REG_DWORD /d 0 /f` },
@@ -157,8 +152,13 @@
             { title: "重設 Explorer", code: `taskkill /f /im explorer.exe & explorer` },
             { title: "開啟電源/輸入法/地區設定", code: `start ms-settings:powersleep & start ms-settings:typing & start ms-settings:regionlanguage` },
             { title: "設定 C:\\test 權限", code: `icacls "C:\\test" /grant Everyone:(OI)(CI)F /T` },
-            { title: "啟動", code: `powershell "irm https://get.activated.win | iex"` },
-            { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` }
+            { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` },
+            { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
+            { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
+            { title: "清除 Windows Update 快取", code: `rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution` },
+            { title: "關閉更新服務", code: `sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled` },
+            { title: "關閉更新 (登錄檔)", code: `REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f` },
+            { title: "移除更新設定", code: `REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f` },
         ];
 
         const container = document.getElementById('container');
