@@ -146,11 +146,21 @@
             { title: "關閉顯示最近新增/最常用/最近開啟", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f` },
             { title: "開啟副檔名及隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f` },
             { title: "恢復副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f` },
-            { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" & winget uninstall --name "Acer Configuration Manager" & winget uninstall --name "ControlCenter Service"` },
-            { title: "移除 Microsoft Office/Hub", code: `winget uninstall --name "Microsoft 365 - zh-tw" & powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"` },
-            { title: "移除微軟程式 (OneNote/OneDrive/Teams/Copilot/Dropbox)", code: `winget uninstall --name "Microsoft OneNote - zh-tw" & winget uninstall --name "Microsoft OneDrive" & winget uninstall --name "Microsoft Teams" & winget uninstall --name "Copilot" & winget uninstall --name "Dropbox 優惠方案"` },
+            { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" 
+winget uninstall --name "Acer Configuration Manager" 
+winget uninstall --name "ControlCenter Service"` },
+            { title: "移除微軟程式 (OneNote/OneDrive/Teams/Copilot/Dropbox)", code: `winget uninstall --name "Microsoft OneNote - zh-tw" 
+winget uninstall --name "Microsoft OneDrive" 
+winget uninstall --name "Microsoft Teams" 
+winget uninstall --name "Copilot" 
+winget uninstall --name "Dropbox 優惠方案"
+winget uninstall --name "Microsoft 365 - zh-tw" 
+powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"` },
             { title: "重設 Explorer", code: `taskkill /f /im explorer.exe & explorer` },
-            { title: "開啟電源/輸入法/地區設定", code: `start ms-settings:powersleep & start ms-settings:typing & start ms-settings:regionlanguage` },
+            { title: "開啟電源/輸入法/地區設定", code: `
+start ms-settings:powersleep 
+start ms-settings:typing 
+start ms-settings:regionlanguage` },
             { title: "設定 C:\\test 權限", code: `icacls "C:\\test" /grant Everyone:(OI)(CI)F /T` },
             { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` },
             { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
@@ -186,19 +196,7 @@
             });
         }
 
-        const batchContent = `:: 檢視更新的KB
-powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"
-wusa /uninstall /kb:1234567 /quiet /norestart
-rd /s /q %windir%\\SoftwareDistribution 
-md %windir%\\SoftwareDistribution
-
-:: 關閉更新
-sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled
-
-:: 關閉更新
-REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f
-REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f
-
+        const batchContent = `
 :: 更新延長
 reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxDays /t REG_DWORD /d 36500 /f
 
@@ -265,6 +263,19 @@ powershell "irm https://get.activated.win | iex"
 
 :: 準備sysprep
 C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown
+
+:: 檢視更新的KB
+powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"
+wusa /uninstall /kb:1234567 /quiet /norestart
+rd /s /q %windir%\\SoftwareDistribution 
+md %windir%\\SoftwareDistribution
+
+:: 關閉更新
+sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled
+
+:: 關閉更新
+REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f
+REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f
 `;
 
         function downloadBatch() {
