@@ -1,84 +1,91 @@
-:: powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"
-:: wusa /uninstall /kb:1234567 /quiet /norestart
-:: rd /s /q %windir%\SoftwareDistribution 
-:: md %windir%\SoftwareDistribution
+:: æª¢è¦–æ›´æ–°çš„KB
+powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"
+wusa /uninstall /kb:1234567 /quiet /norestart
+rd /s /q %windir%\SoftwareDistribution 
+md %windir%\SoftwareDistribution
 
-:: Ãö³¬§ó·s
-:: sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled
+:: é—œé–‰æ›´æ–°
+sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled
 
-:: Ãö³¬§ó·s
-:: REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v AUOptions /t REG_DWORD /d 3 /f
-:: REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v AUOptions /f
+:: é—œé–‰æ›´æ–°
+REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v AUOptions /t REG_DWORD /d 3 /f
+REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v AUOptions /f
 
-:: §ó·s©µªø
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f
+:: æ›´æ–°å»¶é•·
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" /v FlightSettingsMaxDays /t REG_DWORD /d 36500 /f
 
-:: Ãö³¬·j´M
+:: é—œé–‰æœå°‹
 sc stop "WSearch" & sc config "WSearch" start= disabled
 
-:: Ãö³¬ UAC
+:: é—œé–‰ UAC
 reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f
 
-:: °±¥Î Windows 11 ¥kÁä¿ï³æªº·s¼Ë¦¡¡A«ì´_ÂÂª©¥kÁä¿ï³æ
+:: åœç”¨ Windows 11 å³éµé¸å–®çš„æ–°æ¨£å¼ï¼Œæ¢å¾©èˆŠç‰ˆå³éµé¸å–®
 reg add "HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" /f /ve
 
-:: Ãö³¬ Windows ¸Ë¸mªºµL±K½Xµn¤J¡]PasswordLess µn¤J¡^
+:: é—œé–‰ Windows è£ç½®çš„ç„¡å¯†ç¢¼ç™»å…¥ï¼ˆPasswordLess ç™»å…¥ï¼‰
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\PasswordLess\Device" /v DevicePasswordLessBuildVersion /t REG_DWORD /d 0 /f
 control userpasswords2
 
-:: Ãö³¬ ·j´M + ¤u§@ÀËµø + ¤p¤u¨ã + ²á¤Ñ
+:: é—œé–‰ æœå°‹ + å·¥ä½œæª¢è¦– + å°å·¥å…· + èŠå¤©
 powershell -Command "Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Search -Name SearchboxTaskbarMode -Value 0; Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name ShowTaskViewButton -Value 0; Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name TaskbarDa -Value 0; Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name TaskbarMn -Value 0"
 
-:: Ãö³¬Åã¥Ü³Ìªñ·s¼WªºÀ³¥Îµ{¦¡/Åã¥Ü³Ì±`¥ÎÀ³¥Îµ{¦¡/Åã¥Ü³Ìªñ¶}±Òªº¶µ¥Ø
-:: ­Ó¤H¤Æ/¶}©l
+:: é—œé–‰é¡¯ç¤ºæœ€è¿‘æ–°å¢çš„æ‡‰ç”¨ç¨‹å¼/é¡¯ç¤ºæœ€å¸¸ç”¨æ‡‰ç”¨ç¨‹å¼/é¡¯ç¤ºæœ€è¿‘é–‹å•Ÿçš„é …ç›®
+:: å€‹äººåŒ–/é–‹å§‹
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f 
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f 
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f
 
-:: ¶}±Ò°ÆÀÉ¦W¤ÎÁôÂÃÀÉ®×
-:: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f 
-:: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Hidden /t REG_DWORD /d 1 /f 
-:: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f
+:: é–‹å•Ÿå‰¯æª”ååŠéš±è—æª”æ¡ˆ
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f 
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Hidden /t REG_DWORD /d 1 /f 
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f
 
-:: «ì´_ÁôÂÃÀÉ®×
+:: æ¢å¾©éš±è—æª”æ¡ˆ
 :: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Hidden /t REG_DWORD /d 2 /f & reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowSuperHidden /t REG_DWORD /d 0 /f
 
-:: «ì´_°ÆÀÉ¦W
-:: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f
+:: æ¢å¾©å‰¯æª”å
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f
 
-:: ²¾°£ Acer µ{¦¡
+:: ç§»é™¤ Acer ç¨‹å¼
 winget uninstall --name "Acer Product Registration"
 winget uninstall --name "Acer Configuration Manager"
 winget uninstall --name "ControlCenter Service"
 
-:: ·L³n Office
+:: å¾®è»Ÿ Office
 winget uninstall --name "Microsoft 365 - zh-tw"
 powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"
 
-:: ·L³nµ{¦¡
+:: å¾®è»Ÿç¨‹å¼
 winget uninstall --name "Microsoft OneNote - zh-tw"
 winget uninstall --name "Microsoft OneDrive"
 winget uninstall --name "Microsoft Teams"
 winget uninstall --name "Copilot"
-winget uninstall --name "Dropbox Àu´f¤è®×"
+winget uninstall --name "Dropbox å„ªæƒ æ–¹æ¡ˆ"
 
 
-:: ­«³]
+:: é‡è¨­
 taskkill /f /im explorer.exe & explorer
 
-:: ¹q·½¼Ò¦¡ 
+:: é›»æºæ¨¡å¼ 
 start ms-settings:powersleep
 
-:: ³]©w¿é¤Jªk
+
+:: è¨­å®šè¼¸å…¥æ³•
 start ms-settings:typing
+
 
 start ms-settings:regionlanguage
 
-:: ³]©wÅv­­
+
+:: è¨­å®šæ¬Šé™
 icacls "C:\test" /grant Everyone:(OI)(CI)F /T
 
-:: ±Ò°Ê
+
+
+:: å•Ÿå‹•
 powershell "irm https://get.activated.win | iex"
 
-:: ·Ç³Æsysprep (¤£¯à¥ı¦w¸ËLINE )
-C:\Windows\System32\Sysprep\sysprep.exe /generalize /oobe /shutdown
+
+:: æº–å‚™sysprep (ä¸èƒ½å…ˆå®‰è£LINE )
+ C:\Windows\System32\Sysprep\sysprep.exe /generalize /oobe /shutdown 
