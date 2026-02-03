@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows 系統設定指令集</title>
+    <title>Windows 指令工具</title>
     <style>
         :root {
-            --bg-color: #1e1e1e;
-            --card-bg: #2d2d2d;
-            --text-color: #e0e0e0;
-            --accent-color: #4caf50;
-            --code-bg: #151515;
-            --btn-bg: #3e3e3e;
-            --btn-hover: #505050;
+            --bg-color: #121212;
+            --item-bg: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #4caf50;
+            --code-bg: #000000;
+            --border: #333;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
+            color: var(--text-primary);
             margin: 0;
             padding: 20px;
             display: flex;
@@ -26,208 +26,282 @@
             align-items: center;
         }
 
-        header {
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-            gap: 20px;
+        .header-controls {
             width: 100%;
-            max-width: 1400px;
+            max-width: 1200px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .download-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .download-btn:hover {
+            background-color: #1976D2;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 1600px;
         }
 
         @media (max-width: 768px) {
-            .container {
+            .grid-container {
                 grid-template-columns: 1fr;
             }
         }
 
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        .item-card {
+            background-color: var(--item-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #81c784;
-            border-bottom: 1px solid #444;
-            padding-bottom: 5px;
-        }
-
-        .code-wrapper {
             position: relative;
-            background-color: var(--code-bg);
-            border-radius: 6px;
-            overflow: hidden;
-            flex-grow: 1;
         }
 
-        pre {
-            margin: 0;
-            padding: 15px;
-            padding-top: 35px; /* Space for button */
-            overflow-x: auto;
-            white-space: pre-wrap; /* Wrap long lines */
-            word-break: break-all;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 0.9rem;
+        .item-label {
+            font-size: 0.95rem;
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-weight: 600;
+            padding-right: 60px; /* Avoid overlap with button */
+        }
+
+        .code-block {
+            background-color: var(--code-bg);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
             color: #dcdcdc;
-            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0;
         }
 
         .copy-btn {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: var(--btn-bg);
-            color: #fff;
+            top: 10px;
+            right: 10px;
+            background-color: #333;
+            color: white;
             border: 1px solid #555;
             border-radius: 4px;
-            padding: 4px 10px;
+            padding: 4px 12px;
             font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
-            user-select: none;
         }
 
         .copy-btn:hover {
-            background-color: var(--btn-hover);
-            border-color: #777;
+            background-color: #555;
         }
 
         .copy-btn.copied {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-            color: #fff;
+            background-color: var(--accent);
+            border-color: var(--accent);
         }
-
-        /* Syntax highlighting helper */
-        .comment { color: #6a9955; }
-        .command { color: #569cd6; }
-        .string { color: #ce9178; }
-        .param { color: #9cdcfe; }
-
     </style>
 </head>
 <body>
+    <h1><a href="https://github.com/icps0610/cmd">常用指令</a></h1>
+    <div class="header-controls">
+        <button class="download-btn" onclick="downloadBatch()">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+            下載 cmd.bat
+        </button>
+    </div>
 
-    <header>
-        <h1>Windows 系統設定指令集</h1>
-        <p>點擊右上角按鈕即可複製指令</p>
-    </header>
+    <div class="grid-container" id="container">
+        </div>
 
-    <div class="container">
+    <script>
+        // 定義資料結構：標題與指令
+        const commands = [
+            { title: "查詢已安裝更新 (HotFix)", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
+            { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
+            { title: "清除 Windows Update 快取", code: `rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution` },
+            { title: "停用更新服務 (WUA/BITS/DoSvc)", code: `sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled` },
+            { title: "登錄檔：設定 AUOptions (停用自動更新)", code: `REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f` },
+            { title: "登錄檔：刪除 AUOptions 設定", code: `REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f` },
+            { title: "延長更新暫停天數 (36500天)", code: `reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f` },
+            { title: "停用 Windows Search 服務", code: `sc stop "WSearch" & sc config "WSearch" start= disabled` },
+            { title: "關閉 UAC (使用者帳戶控制)", code: `reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA /t REG_DWORD /d 0 /f` },
+            { title: "恢復舊版右鍵選單 (Win11)", code: `reg add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /f /ve` },
+            { title: "關閉無密碼登入限制 (PasswordLess)", code: `reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\PasswordLess\\Device" /v DevicePasswordLessBuildVersion /t REG_DWORD /d 0 /f` },
+            { title: "開啟帳戶管理工具 (自動登入設定)", code: `control userpasswords2` },
+            { title: "關閉搜尋/工作檢視/小工具/聊天 (Taskbar)", code: `powershell -Command "Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search -Name SearchboxTaskbarMode -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name ShowTaskViewButton -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarDa -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarMn -Value 0"` },
+            { title: "開始選單：隱藏最近新增的應用程式", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f` },
+            { title: "開始選單：隱藏最常用應用程式", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f` },
+            { title: "檔案總管：不顯示最近開啟的項目", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f` },
+            { title: "檔案總管：顯示副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f` },
+            { title: "檔案總管：顯示隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f` },
+            { title: "檔案總管：顯示系統保護檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f` },
+            { title: "恢復預設：隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 2 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 0 /f` },
+            { title: "恢復預設：隱藏副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f` },
+            { title: "移除程式：Acer Product Registration", code: `winget uninstall --name "Acer Product Registration"` },
+            { title: "移除程式：Acer Configuration Manager", code: `winget uninstall --name "Acer Configuration Manager"` },
+            { title: "移除程式：Acer ControlCenter Service", code: `winget uninstall --name "ControlCenter Service"` },
+            { title: "移除程式：Microsoft 365", code: `winget uninstall --name "Microsoft 365 - zh-tw"` },
+            { title: "移除 App：OfficeHub", code: `powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"` },
+            { title: "移除程式：OneNote", code: `winget uninstall --name "Microsoft OneNote - zh-tw"` },
+            { title: "移除程式：OneDrive", code: `winget uninstall --name "Microsoft OneDrive"` },
+            { title: "移除程式：Teams", code: `winget uninstall --name "Microsoft Teams"` },
+            { title: "移除程式：Copilot", code: `winget uninstall --name "Copilot"` },
+            { title: "移除程式：Dropbox 優惠方案", code: `winget uninstall --name "Dropbox 優惠方案"` },
+            { title: "重啟檔案總管 (explorer.exe)", code: `taskkill /f /im explorer.exe & explorer` },
+            { title: "開啟設定：電源與睡眠", code: `start ms-settings:powersleep` },
+            { title: "開啟設定：輸入法", code: `start ms-settings:typing` },
+            { title: "開啟設定：地區與語言", code: `start ms-settings:regionlanguage` },
+            { title: "設定 C:\\test 權限 (Everyone Full)", code: `icacls "C:\\test" /grant Everyone:(OI)(CI)F /T` },
+            { title: "執行 MAS 啟用腳本", code: `powershell "irm https://get.activated.win | iex"` },
+            { title: "Sysprep (一般化/OOBE/關機)", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` }
+        ];
 
-        <div class="card">
-            <div class="card-title">Windows Update 查詢與清理</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>:: powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"
+        // 渲染畫面
+        const container = document.getElementById('container');
+        commands.forEach(cmd => {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = `
+                <div class="item-label">${cmd.title}</div>
+                <button class="copy-btn" onclick="copyText(this)">複製</button>
+                <pre class="code-block">${cmd.code}</pre>
+            `;
+            container.appendChild(card);
+        });
+
+        // 複製功能
+        function copyText(btn) {
+            const code = btn.nextElementSibling.innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const original = btn.innerText;
+                btn.innerText = "OK";
+                btn.classList.add("copied");
+                setTimeout(() => {
+                    btn.innerText = original;
+                    btn.classList.remove("copied");
+                }, 1500);
+            });
+        }
+
+        // 完整的批次檔內容 (原始結構)
+        const batchContent = `:: powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"
 :: wusa /uninstall /kb:1234567 /quiet /norestart
-:: rd /s /q %windir%\SoftwareDistribution 
-:: md %windir%\SoftwareDistribution</pre>
-            </div>
-        </div>
+:: rd /s /q %windir%\\SoftwareDistribution 
+:: md %windir%\\SoftwareDistribution
 
-        <div class="card">
-            <div class="card-title">關閉更新 (服務)</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>:: sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled</pre>
-            </div>
-        </div>
+:: 關閉更新
+:: sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled
 
-        <div class="card">
-            <div class="card-title">關閉更新 (登錄檔)</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>:: REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v AUOptions /t REG_DWORD /d 3 /f
-:: REG DELETE "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v AUOptions /f</pre>
-            </div>
-        </div>
+:: 關閉更新
+:: REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f
+:: REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f
 
-        <div class="card">
-            <div class="card-title">更新延長 (36500天)</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f</pre>
-            </div>
-        </div>
+:: 更新延長
+reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f
 
-        <div class="card">
-            <div class="card-title">關閉 Windows Search 服務</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>sc stop "WSearch" & sc config "WSearch" start= disabled</pre>
-            </div>
-        </div>
+:: 關閉搜尋
+sc stop "WSearch" & sc config "WSearch" start= disabled
 
-        <div class="card">
-            <div class="card-title">關閉 UAC (使用者帳戶控制)</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f</pre>
-            </div>
-        </div>
+:: 關閉 UAC
+reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA /t REG_DWORD /d 0 /f
 
-        <div class="card">
-            <div class="card-title">恢復 Windows 10 舊版右鍵選單</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>reg add "HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" /f /ve</pre>
-            </div>
-        </div>
+:: 停用 Windows 11 右鍵選單的新樣式，恢復舊版右鍵選單
+reg add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /f /ve
 
-        <div class="card">
-            <div class="card-title">關閉無密碼登入 (啟用自動登入選項)</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\PasswordLess\Device" /v DevicePasswordLessBuildVersion /t REG_DWORD /d 0 /f
-control userpasswords2</pre>
-            </div>
-        </div>
+:: 關閉 Windows 裝置的無密碼登入（PasswordLess 登入）
+reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\PasswordLess\\Device" /v DevicePasswordLessBuildVersion /t REG_DWORD /d 0 /f
+control userpasswords2
 
-        <div class="card">
-            <div class="card-title">介面清理 (搜尋/工作檢視/小工具/聊天)</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>powershell -Command "Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Search -Name SearchboxTaskbarMode -Value 0; Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name ShowTaskViewButton -Value 0; Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name TaskbarDa -Value 0; Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name TaskbarMn -Value 0"</pre>
-            </div>
-        </div>
+:: 關閉 搜尋 + 工作檢視 + 小工具 + 聊天
+powershell -Command "Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search -Name SearchboxTaskbarMode -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name ShowTaskViewButton -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarDa -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarMn -Value 0"
 
-        <div class="card">
-            <div class="card-title">開始功能表清理 (隱藏最近新增/常用)</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f 
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f 
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f</pre>
-            </div>
-        </div>
+:: 關閉顯示最近新增的應用程式/顯示最常用應用程式/顯示最近開啟的項目
+:: 個人化/開始
+reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f 
+reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f 
+reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f
 
-        <div class="card">
-            <div class="card-title">檔案總管設定 (副檔名與隱藏檔)</div>
-            <div class="code-wrapper">
-                <button class="copy-btn" onclick="copyCode(this)">複製</button>
-                <pre>:: 開啟副檔名及隱藏檔案
-:: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f 
-:: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Hidden /t REG_DWORD /d 1 /f 
-:: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f
+:: 開啟副檔名及隱藏檔案
+:: reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f 
+:: reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f 
+:: reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f
 
 :: 恢復隱藏檔案
-:: reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Hidden /t REG_DWORD /d 2 /f & reg add "HKCU\Software\
+:: reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 2 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 0 /f
+
+:: 恢復副檔名
+:: reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f
+
+:: 移除 Acer 程式
+winget uninstall --name "Acer Product Registration"
+winget uninstall --name "Acer Configuration Manager"
+winget uninstall --name "ControlCenter Service"
+
+:: 微軟 Office
+winget uninstall --name "Microsoft 365 - zh-tw"
+powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"
+
+:: 微軟程式
+winget uninstall --name "Microsoft OneNote - zh-tw"
+winget uninstall --name "Microsoft OneDrive"
+winget uninstall --name "Microsoft Teams"
+winget uninstall --name "Copilot"
+winget uninstall --name "Dropbox 優惠方案"
+
+
+:: 重設
+taskkill /f /im explorer.exe & explorer
+
+:: 電源模式 
+start ms-settings:powersleep
+
+:: 設定輸入法
+start ms-settings:typing
+
+start ms-settings:regionlanguage
+
+:: 設定權限
+icacls "C:\\test" /grant Everyone:(OI)(CI)F /T
+
+:: 啟動
+powershell "irm https://get.activated.win | iex"
+
+:: 準備sysprep (不能先安裝LINE )
+C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown
+`;
+
+        function downloadBatch() {
+            const blob = new Blob([batchContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cmd.bat';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
