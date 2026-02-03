@@ -82,7 +82,7 @@
             color: var(--accent);
             margin-bottom: 8px;
             font-weight: 600;
-            padding-right: 60px; /* Avoid overlap with button */
+            padding-right: 60px;
         }
 
         .code-block {
@@ -123,7 +123,7 @@
     </style>
 </head>
 <body>
-    <h1><a href="https://github.com/icps0610/cmd">常用指令</a></h1>
+    <h1><a href="https://github.com/icps0610/cmd" style="color: inherit; text-decoration: none;">常用指令</a></h1>
     <div class="header-controls">
         <button class="download-btn" onclick="downloadBatch()">
             <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
@@ -131,53 +131,36 @@
         </button>
     </div>
 
-    <div class="grid-container" id="container">
-        </div>
+    <div class="grid-container" id="container"></div>
 
     <script>
-        // 定義資料結構：標題與指令
         const commands = [
-            { title: "查詢已安裝更新 (HotFix)", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
+            { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
             { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
             { title: "清除 Windows Update 快取", code: `rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution` },
-            { title: "停用更新服務 (WUA/BITS/DoSvc)", code: `sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled` },
-            { title: "登錄檔：設定 AUOptions (停用自動更新)", code: `REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f` },
-            { title: "登錄檔：刪除 AUOptions 設定", code: `REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f` },
-            { title: "延長更新暫停天數 (36500天)", code: `reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f` },
-            { title: "停用 Windows Search 服務", code: `sc stop "WSearch" & sc config "WSearch" start= disabled` },
-            { title: "關閉 UAC (使用者帳戶控制)", code: `reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA /t REG_DWORD /d 0 /f` },
-            { title: "恢復舊版右鍵選單 (Win11)", code: `reg add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /f /ve` },
-            { title: "關閉無密碼登入限制 (PasswordLess)", code: `reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\PasswordLess\\Device" /v DevicePasswordLessBuildVersion /t REG_DWORD /d 0 /f` },
-            { title: "開啟帳戶管理工具 (自動登入設定)", code: `control userpasswords2` },
-            { title: "關閉搜尋/工作檢視/小工具/聊天 (Taskbar)", code: `powershell -Command "Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search -Name SearchboxTaskbarMode -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name ShowTaskViewButton -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarDa -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarMn -Value 0"` },
-            { title: "開始選單：隱藏最近新增的應用程式", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f` },
-            { title: "開始選單：隱藏最常用應用程式", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f` },
-            { title: "檔案總管：不顯示最近開啟的項目", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f` },
-            { title: "檔案總管：顯示副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f` },
-            { title: "檔案總管：顯示隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f` },
-            { title: "檔案總管：顯示系統保護檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f` },
-            { title: "恢復預設：隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 2 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 0 /f` },
-            { title: "恢復預設：隱藏副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f` },
-            { title: "移除程式：Acer Product Registration", code: `winget uninstall --name "Acer Product Registration"` },
-            { title: "移除程式：Acer Configuration Manager", code: `winget uninstall --name "Acer Configuration Manager"` },
-            { title: "移除程式：Acer ControlCenter Service", code: `winget uninstall --name "ControlCenter Service"` },
-            { title: "移除程式：Microsoft 365", code: `winget uninstall --name "Microsoft 365 - zh-tw"` },
-            { title: "移除 App：OfficeHub", code: `powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"` },
-            { title: "移除程式：OneNote", code: `winget uninstall --name "Microsoft OneNote - zh-tw"` },
-            { title: "移除程式：OneDrive", code: `winget uninstall --name "Microsoft OneDrive"` },
-            { title: "移除程式：Teams", code: `winget uninstall --name "Microsoft Teams"` },
-            { title: "移除程式：Copilot", code: `winget uninstall --name "Copilot"` },
-            { title: "移除程式：Dropbox 優惠方案", code: `winget uninstall --name "Dropbox 優惠方案"` },
-            { title: "重啟檔案總管 (explorer.exe)", code: `taskkill /f /im explorer.exe & explorer` },
-            { title: "開啟設定：電源與睡眠", code: `start ms-settings:powersleep` },
-            { title: "開啟設定：輸入法", code: `start ms-settings:typing` },
-            { title: "開啟設定：地區與語言", code: `start ms-settings:regionlanguage` },
-            { title: "設定 C:\\test 權限 (Everyone Full)", code: `icacls "C:\\test" /grant Everyone:(OI)(CI)F /T` },
-            { title: "執行 MAS 啟用腳本", code: `powershell "irm https://get.activated.win | iex"` },
-            { title: "Sysprep (一般化/OOBE/關機)", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` }
+            { title: "關閉更新服務", code: `sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled` },
+            { title: "關閉更新 (登錄檔)", code: `REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f` },
+            { title: "移除更新設定", code: `REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f` },
+            { title: "更新延長 (36500天)", code: `reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxDays /t REG_DWORD /d 36500 /f` },
+            { title: "關閉搜尋", code: `sc stop "WSearch" & sc config "WSearch" start= disabled` },
+            { title: "關閉 UAC", code: `reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA /t REG_DWORD /d 0 /f` },
+            { title: "恢復舊版右鍵選單", code: `reg add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /f /ve` },
+            { title: "關閉無密碼登入", code: `reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\PasswordLess\\Device" /v DevicePasswordLessBuildVersion /t REG_DWORD /d 0 /f` },
+            { title: "帳戶設定", code: `control userpasswords2` },
+            { title: "關閉 搜尋+工作檢視+小工具+聊天", code: `powershell -Command "Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search -Name SearchboxTaskbarMode -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name ShowTaskViewButton -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarDa -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarMn -Value 0"` },
+            { title: "關閉顯示最近新增/最常用/最近開啟", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f` },
+            { title: "開啟副檔名及隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f` },
+            { title: "恢復副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f` },
+            { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" & winget uninstall --name "Acer Configuration Manager" & winget uninstall --name "ControlCenter Service"` },
+            { title: "移除 Microsoft Office/Hub", code: `winget uninstall --name "Microsoft 365 - zh-tw" & powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"` },
+            { title: "移除微軟程式 (OneNote/OneDrive/Teams/Copilot/Dropbox)", code: `winget uninstall --name "Microsoft OneNote - zh-tw" & winget uninstall --name "Microsoft OneDrive" & winget uninstall --name "Microsoft Teams" & winget uninstall --name "Copilot" & winget uninstall --name "Dropbox 優惠方案"` },
+            { title: "重設 Explorer", code: `taskkill /f /im explorer.exe & explorer` },
+            { title: "開啟電源/輸入法/地區設定", code: `start ms-settings:powersleep & start ms-settings:typing & start ms-settings:regionlanguage` },
+            { title: "設定 C:\\test 權限", code: `icacls "C:\\test" /grant Everyone:(OI)(CI)F /T` },
+            { title: "啟動 MAS", code: `powershell "irm https://get.activated.win | iex"` },
+            { title: "準備 Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` }
         ];
 
-        // 渲染畫面
         const container = document.getElementById('container');
         commands.forEach(cmd => {
             const card = document.createElement('div');
@@ -190,7 +173,6 @@
             container.appendChild(card);
         });
 
-        // 複製功能
         function copyText(btn) {
             const code = btn.nextElementSibling.innerText;
             navigator.clipboard.writeText(code).then(() => {
@@ -204,21 +186,21 @@
             });
         }
 
-        // 完整的批次檔內容 (原始結構)
-        const batchContent = `:: powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"
-:: wusa /uninstall /kb:1234567 /quiet /norestart
-:: rd /s /q %windir%\\SoftwareDistribution 
-:: md %windir%\\SoftwareDistribution
+        const batchContent = `:: 檢視更新的KB
+powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"
+wusa /uninstall /kb:1234567 /quiet /norestart
+rd /s /q %windir%\\SoftwareDistribution 
+md %windir%\\SoftwareDistribution
 
 :: 關閉更新
-:: sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled
+sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled
 
 :: 關閉更新
-:: REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f
-:: REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f
+REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f
+REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f
 
 :: 更新延長
-reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f
+reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxDays /t REG_DWORD /d 36500 /f
 
 :: 關閉搜尋
 sc stop "WSearch" & sc config "WSearch" start= disabled
@@ -237,21 +219,17 @@ control userpasswords2
 powershell -Command "Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search -Name SearchboxTaskbarMode -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name ShowTaskViewButton -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarDa -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarMn -Value 0"
 
 :: 關閉顯示最近新增的應用程式/顯示最常用應用程式/顯示最近開啟的項目
-:: 個人化/開始
 reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f 
 reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f 
 reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f
 
 :: 開啟副檔名及隱藏檔案
-:: reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f 
-:: reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f 
-:: reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f
-
-:: 恢復隱藏檔案
-:: reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 2 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 0 /f
+reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f 
+reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f 
+reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f
 
 :: 恢復副檔名
-:: reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f
+reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f
 
 :: 移除 Acer 程式
 winget uninstall --name "Acer Product Registration"
@@ -269,7 +247,6 @@ winget uninstall --name "Microsoft Teams"
 winget uninstall --name "Copilot"
 winget uninstall --name "Dropbox 優惠方案"
 
-
 :: 重設
 taskkill /f /im explorer.exe & explorer
 
@@ -278,7 +255,6 @@ start ms-settings:powersleep
 
 :: 設定輸入法
 start ms-settings:typing
-
 start ms-settings:regionlanguage
 
 :: 設定權限
@@ -287,7 +263,7 @@ icacls "C:\\test" /grant Everyone:(OI)(CI)F /T
 :: 啟動
 powershell "irm https://get.activated.win | iex"
 
-:: 準備sysprep (不能先安裝LINE )
+:: 準備sysprep
 C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown
 `;
 
