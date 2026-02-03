@@ -157,8 +157,8 @@
             { title: "重設 Explorer", code: `taskkill /f /im explorer.exe & explorer` },
             { title: "開啟電源/輸入法/地區設定", code: `start ms-settings:powersleep & start ms-settings:typing & start ms-settings:regionlanguage` },
             { title: "設定 C:\\test 權限", code: `icacls "C:\\test" /grant Everyone:(OI)(CI)F /T` },
-            { title: "啟動 MAS", code: `powershell "irm https://get.activated.win | iex"` },
-            { title: "準備 Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` }
+            { title: "啟動", code: `powershell "irm https://get.activated.win | iex"` },
+            { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` }
         ];
 
         const container = document.getElementById('container');
