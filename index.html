@@ -161,7 +161,7 @@ powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"
 start ms-settings:powersleep 
 start ms-settings:typing 
 start ms-settings:regionlanguage` },
-            { title: "設定 C:\\test 權限", code: `icacls "C:\\test" /grant Everyone:(OI)(CI)F /T` },
+            { title: "設定 C:\\test 權限", code: `icacls c:\\test /grant everyone:F /T /C /Q` },
             { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` },
             { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
             { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
@@ -256,7 +256,7 @@ start ms-settings:typing
 start ms-settings:regionlanguage
 
 :: 設定權限
-icacls "C:\\test" /grant Everyone:(OI)(CI)F /T
+icacls "C:\\test" /grant Everyone:F /T /C /Q
 
 :: 啟動
 powershell "irm https://get.activated.win | iex"
