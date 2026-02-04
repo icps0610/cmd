@@ -158,7 +158,9 @@ winget uninstall --name "Microsoft 365 - zh-tw"
 powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"` },
             { title: "重設 Explorer", code: `taskkill /f /im explorer.exe & explorer` },
             { title: "開啟電源/輸入法/地區設定", code: `start ms-settings:powersleep 
+pause
 start ms-settings:typing 
+pause
 start ms-settings:regionlanguage` },
             { title: "設定 C:\\test 權限", code: `icacls c:\\test /grant everyone:F /T /C /Q` },
             { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` },
