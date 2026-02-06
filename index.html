@@ -164,6 +164,7 @@ pause
 start ms-settings:regionlanguage` },
             { title: "設定 C:\\test 權限", code: `icacls c:\\test /grant everyone:F /T /C /Q` },
             { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` },
+            { title: "建立本機帳號", code: `[shift+F10] start ms-cxh:localonly` },
             { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
             { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
             { title: "清除 Windows Update 快取", code: `rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution` },
