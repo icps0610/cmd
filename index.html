@@ -4,6 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Windows 指令工具</title>
+
+</head>
+<body>
+    <h1><a href="https://github.com/icps0610/cmd" style="color: inherit; text-decoration: none;">常用指令</a></h1>
+    <div class="header-controls">
+        <button class="download-btn" onclick="downloadBatch()">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+            下載 cmd.bat
+        </button>
+    </div>
+
+    <div class="grid-container" id="container"></div>
+
+    <script>
+        const commands = [
+            { title: "啟動", code: `powershell "irm https://get.activated.win | iex"` },
+            { title: "更新延長 (36500天)", code: `reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxDays /t REG_DWORD /d 36500 /f` },
+            { title: "關閉搜尋", code: `sc stop "WSearch" & sc config "WSearch" start= disabled` },
+            { title: "關閉 UAC", code: `reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA /t REG_DWORD /d 0 /f` },
+            { title: "恢復舊版右鍵選單", code: `reg add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /f /ve` },
+            { title: "關閉無密碼登入", code: `reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\PasswordLess\\Device" /v DevicePasswordLessBuildVersion /t REG_DWORD /d 0 /f` },
+            { title: "帳戶設定", code: `control userpasswords2` },
+            { title: "關閉 搜尋+工作檢視+小工具+聊天", code: `powershell -Command "Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search -Name SearchboxTaskbarMode -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name ShowTaskViewButton -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarDa -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarMn -Value 0"` },
+            { title: "關閉顯示最近新增/最常用/最近開啟", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f` },
+            { title: "開啟副檔名及隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f` },
+            { title: "恢復副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f` },
+            { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" 
+winget uninstall --name "Acer Configuration Manager" 
+winget uninstall --name "ControlCenter Service"` },
+            { title: "移除微軟程式 (OneNote/OneDrive/Teams/Copilot/Dropbox)", code: `winget uninstall --name "Microsoft OneNote - zh-tw" 
+winget uninstall --name "Microsoft OneDrive" 
+winget uninstall --name "Microsoft Teams" 
+winget uninstall --name "Copilot" 
+winget uninstall --name "Dropbox 優惠方案"
+winget uninstall --name "Microsoft 365 - zh-tw" 
+powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"` },
+            { title: "移除WindowsAI", code: `https://github.com/zoicware/RemoveWindowsAI` },
+            { title: "重設 Explorer", code: `taskkill /f /im explorer.exe & explorer` },
+            { title: "開啟電源/輸入法/地區設定", code: `start ms-settings:powersleep 
+pause
+start ms-settings:typing 
+pause
+start ms-settings:regionlanguage` },
+            { title: "設定 C:\\test 權限", code: `icacls c:\\test /grant everyone:F /T /C /Q` },
+            { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` },
+            { title: "建立本機帳號", code: `[shift+F10] start ms-cxh:localonly` },
+            { title: "系統稽核模式", code: `[Ctrl + Shift + F3]` },
+            { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
+            { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
+            { title: "清除 Windows Update 快取", code: `rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution` },
+            { title: "關閉更新服務", code: `sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled` },
+            { title: "關閉更新 (登錄檔)", code: `REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f` },
+            { title: "移除更新設定", code: `REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f` },
+        ];
+
+        const container = document.getElementById('container');
+        commands.forEach(cmd => {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = `
+                <div class="item-label">${cmd.title}</div>
+                <button class="copy-btn" onclick="copyText(this)">複製</button>
+                <pre class="code-block">${cmd.code}</pre>
+            `;
+            container.appendChild(card);
+        });
+
+        function copyText(btn) {
+            const code = btn.nextElementSibling.innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const original = btn.innerText;
+                btn.innerText = "OK";
+                btn.classList.add("copied");
+                setTimeout(() => {
+                    btn.innerText = original;
+                    btn.classList.remove("copied");
+                }, 1500);
+            });
+        }
+
+        function downloadBatch() {
+            // 加入 chcp 65001 以支援 UTF-8 (避免中文亂碼)
+            let content = "@echo off\r\nchcp 65001 > nul\r\n\r\n";
+            
+            commands.forEach(cmd => {
+                content += `:: ${cmd.title}\r\n${cmd.code}\r\n\r\n`;
+            });
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cmd.bat';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
     <style>
         :root {
             --bg-color: #121212;
@@ -121,102 +221,4 @@
             border-color: var(--accent);
         }
     </style>
-</head>
-<body>
-    <h1><a href="https://github.com/icps0610/cmd" style="color: inherit; text-decoration: none;">常用指令</a></h1>
-    <div class="header-controls">
-        <button class="download-btn" onclick="downloadBatch()">
-            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
-            下載 cmd.bat
-        </button>
-    </div>
-
-    <div class="grid-container" id="container"></div>
-
-    <script>
-        const commands = [
-            { title: "啟動", code: `powershell "irm https://get.activated.win | iex"` },
-            { title: "更新延長 (36500天)", code: `reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxDays /t REG_DWORD /d 36500 /f` },
-            { title: "關閉搜尋", code: `sc stop "WSearch" & sc config "WSearch" start= disabled` },
-            { title: "關閉 UAC", code: `reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA /t REG_DWORD /d 0 /f` },
-            { title: "恢復舊版右鍵選單", code: `reg add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /f /ve` },
-            { title: "關閉無密碼登入", code: `reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\PasswordLess\\Device" /v DevicePasswordLessBuildVersion /t REG_DWORD /d 0 /f` },
-            { title: "帳戶設定", code: `control userpasswords2` },
-            { title: "關閉 搜尋+工作檢視+小工具+聊天", code: `powershell -Command "Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search -Name SearchboxTaskbarMode -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name ShowTaskViewButton -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarDa -Value 0; Set-ItemProperty -Path HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced -Name TaskbarMn -Value 0"` },
-            { title: "關閉顯示最近新增/最常用/最近開啟", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Start" /v HideMostUsedApps /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Start_TrackDocs /t REG_DWORD /d 0 /f` },
-            { title: "開啟副檔名及隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f` },
-            { title: "恢復副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f` },
-            { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" 
-winget uninstall --name "Acer Configuration Manager" 
-winget uninstall --name "ControlCenter Service"` },
-            { title: "移除微軟程式 (OneNote/OneDrive/Teams/Copilot/Dropbox)", code: `winget uninstall --name "Microsoft OneNote - zh-tw" 
-winget uninstall --name "Microsoft OneDrive" 
-winget uninstall --name "Microsoft Teams" 
-winget uninstall --name "Copilot" 
-winget uninstall --name "Dropbox 優惠方案"
-winget uninstall --name "Microsoft 365 - zh-tw" 
-powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"` },
-            { title: "重設 Explorer", code: `taskkill /f /im explorer.exe & explorer` },
-            { title: "開啟電源/輸入法/地區設定", code: `start ms-settings:powersleep 
-pause
-start ms-settings:typing 
-pause
-start ms-settings:regionlanguage` },
-            { title: "設定 C:\\test 權限", code: `icacls c:\\test /grant everyone:F /T /C /Q` },
-            { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` },
-            { title: "建立本機帳號", code: `[shift+F10] start ms-cxh:localonly` },
-            { title: "系統稽核模式", code: `[Ctrl + Shift + F3]` },
-            { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
-            { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
-            { title: "清除 Windows Update 快取", code: `rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution` },
-            { title: "關閉更新服務", code: `sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled` },
-            { title: "關閉更新 (登錄檔)", code: `REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f` },
-            { title: "移除更新設定", code: `REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f` },
-        ];
-
-        const container = document.getElementById('container');
-        commands.forEach(cmd => {
-            const card = document.createElement('div');
-            card.className = 'item-card';
-            card.innerHTML = `
-                <div class="item-label">${cmd.title}</div>
-                <button class="copy-btn" onclick="copyText(this)">複製</button>
-                <pre class="code-block">${cmd.code}</pre>
-            `;
-            container.appendChild(card);
-        });
-
-        function copyText(btn) {
-            const code = btn.nextElementSibling.innerText;
-            navigator.clipboard.writeText(code).then(() => {
-                const original = btn.innerText;
-                btn.innerText = "OK";
-                btn.classList.add("copied");
-                setTimeout(() => {
-                    btn.innerText = original;
-                    btn.classList.remove("copied");
-                }, 1500);
-            });
-        }
-
-        function downloadBatch() {
-            // 加入 chcp 65001 以支援 UTF-8 (避免中文亂碼)
-            let content = "@echo off\r\nchcp 65001 > nul\r\n\r\n";
-            
-            commands.forEach(cmd => {
-                content += `:: ${cmd.title}\r\n${cmd.code}\r\n\r\n`;
-            });
-
-            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'cmd.bat';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-    </script>
-</body>
 </html>
