@@ -26,7 +26,7 @@
             { title: "更新延長 (36500天)", code: `reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f` },
             { title: "開啟副檔名及隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f` },
             { title: "恢復副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f` },
-            { title: "關閉搜尋+工作檢視+小工具+聊天", code: `ms-settings:taskbar` },
+
             
             { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" 
 winget uninstall --name "Acer Configuration Manager" 
@@ -40,13 +40,17 @@ winget uninstall --name "Microsoft 新聞"
 winget uninstall --name "Microsoft 365 - zh-tw" 
 powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"` },
             { title: "移除WindowsAI", code: `https://github.com/zoicware/RemoveWindowsAI
-powershell "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))"
-` },
-            { title: "開啟電源/輸入法/地區設定", code: `start ms-settings:powersleep 
+powershell "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))"`},
+            { title: "工具列/開啟電源/輸入法/地區設定", code: `ms-settings:taskbar
+pause
+start ms-settings:powersleep 
 pause
 start ms-settings:typing 
 pause
 start ms-settings:regionlanguage` },
+
+
+            
             { title: "設定 C:\\test 權限", code: `icacls c:\\test /grant everyone:F /T /C /Q` },
 
             { title: "啟動", code: `powershell "irm https://get.activated.win | iex"` },
