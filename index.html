@@ -55,6 +55,20 @@ start ms-settings:regionlanguage` },
             { title: "系統稽核模式", code: `[Ctrl + Shift + F3]` },
             { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
             { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
+
+
+            { title: "PE下操作: 帳號", code: `reg load HKLM\OFFLINE C:\Windows\System32\Config\SAM
+echo 顯示帳號名稱
+reg query HKLM\OFFLINE\SAM\Domains\Account\Users\Names
+
+echo 新增帳號
+net user user passwd /add
+net localgroup administrators user /add
+reg unload HKLM\OFFLINE`},
+            { title: "PE下操作: 查詢IP", code: `reg load HKLM\OFFLINE C:\Windows\System32\Config\SYSTEM
+reg query "HKLM\OFFLINE\ControlSet001\Services\Tcpip\Parameters\Interfaces" /s 
+reg unload HKLM\OFFLINE`},
+
             
             
             { title: "清除 Windows Update 快取", code: `rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution` },
