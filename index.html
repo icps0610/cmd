@@ -60,15 +60,12 @@ start ms-settings:regionlanguage` },
             { title: "PE下操作: 帳號", code: `reg load HKLM\OFFLINE C:\Windows\System32\Config\SAM
 echo 顯示帳號名稱
 reg query HKLM\OFFLINE\SAM\Domains\Account\Users\Names
-
-echo 新增帳號
-net user user passwd /add
-net localgroup administrators user /add
 reg unload HKLM\OFFLINE`},
             { title: "PE下操作: 查詢IP", code: `reg load HKLM\OFFLINE C:\Windows\System32\Config\SYSTEM
 reg query "HKLM\OFFLINE\ControlSet001\Services\Tcpip\Parameters\Interfaces" /s 
 reg unload HKLM\OFFLINE`},
-
+            { title: "新增帳號", code: `net user user passwd /add
+net localgroup administrators user /add`},
             
             
             { title: "清除 Windows Update 快取", code: `rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution` },
