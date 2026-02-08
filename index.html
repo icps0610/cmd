@@ -55,7 +55,7 @@ start ms-settings:regionlanguage` },
 
             { title: "啟動", code: `powershell "irm https://get.activated.win | iex"` },
             { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` },
-            { title: "建立本機帳號", code: `[shift+F10] start ms-cxh:localonly 或者 oobe\bypassnro` },
+            { title: "建立本機帳號", code: `[shift+F10] start ms-cxh:localonly 或者 oobe\\bypassnro` },
             { title: "系統稽核模式", code: `[Ctrl + Shift + F3]` },
             { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
             { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
