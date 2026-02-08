@@ -57,12 +57,12 @@ start ms-settings:regionlanguage` },
             { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
 
 
-            { title: "PE下操作: 帳號", code: `reg load HKLM\OFFLINE C:\Windows\System32\Config\SAM
-reg query HKLM\OFFLINE\SAM\Domains\Account\Users\Names
-reg unload HKLM\OFFLINE`},
-            { title: "PE下操作: 查詢IP", code: `reg load HKLM\OFFLINE C:\Windows\System32\Config\SYSTEM
-reg query "HKLM\OFFLINE\ControlSet001\Services\Tcpip\Parameters\Interfaces" /s 
-reg unload HKLM\OFFLINE`},
+            { title: "PE下操作: 帳號", code: `reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SAM
+reg query HKLM\\OFFLINE\\SAM\\Domains\\Account\\Users\\Names
+reg unload HKLM\\OFFLINE`},
+            { title: "PE下操作: 查詢IP", code: `reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SYSTEM
+reg query "HKLM\\OFFLINE\\ControlSet001\\Services\\Tcpip\\Parameters\\Interfaces" /s 
+reg unload HKLM\\OFFLINE`},
             { title: "新增帳號", code: `net user user passwd /add
 net localgroup administrators user /add`},
             
