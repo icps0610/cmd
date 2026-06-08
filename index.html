@@ -19,6 +19,7 @@
 
     <script>
         const commands = [
+            { title: "日期時間", code: `echo %date:~0,4%.%date:~5,2%.%date:~8,2%.%time:~0,2%.%time:~3,2%.%time:~6,2%` },
             { title: "關閉 UAC", code: `reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA /t REG_DWORD /d 0 /f` },
             { title: "關閉搜尋", code: `sc stop "WSearch" & sc config "WSearch" start= disabled` },
             { title: "恢復舊版右鍵選單", code: `reg add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /f /ve` },
