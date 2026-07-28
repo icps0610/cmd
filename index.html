@@ -27,6 +27,8 @@
             { title: "更新延長 (36500天)", code: `reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f` },
             { title: "開啟副檔名及隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f` },
             { title: "恢復副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f` },
+            { title: "win相機", code: `start microsoft.windows.camera:` },
+            { title: "移除印表機", code: `電腦\\HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Print\\Printers\\` },
 
             
             { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" 
