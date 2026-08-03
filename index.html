@@ -29,8 +29,8 @@
             { title: "恢復副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f` },
             { title: "win相機", code: `start microsoft.windows.camera:` },
             { title: "移除印表機", code: `電腦\\HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Print\\Printers\\` },
-            { title: "查詢印表機PS", code: `Get-PrinterPort | Where-Object { $_.PrinterHostAddress -like "*168*" } | Format-Table Name, PrinterHostAddress, SNMPEnabled, Protocol` },
-            { title: "查詢印表機UI", code: `printui /s /t1` },
+            { title: "PS_印表機PORT", code: `Get-PrinterPort | Where-Object { $_.PrinterHostAddress -like "*168*" } | Format-Table Name, PrinterHostAddress, SNMPEnabled, Protocol` },
+            { title: "UI_查詢印表機PORT", code: `printui /s /t1` },
 
             
             { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" 
