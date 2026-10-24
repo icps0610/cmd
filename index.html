@@ -36,7 +36,18 @@ start ms-settings:regionlanguage` },
             { title: "縮短網路磁碟機逾時等待", code: `reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanWorkstation\\Parameters" /v SessTimeout /t REG_DWORD /d 10 /f
 reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanWorkstation\\Parameters" /v ExtendedSessTimeout /t REG_DWORD /d 10 /f` },
             { title: "設定 C:\\test 權限", code: `icacls c:\\test /grant everyone:F /T /C /Q` },
+            { title: "設定 D:\\User 權限", code: `
+takeown /f "D:\Users" /r /d y > nul
+icacls "D:\Users" /grant "%USERNAME%":(OI)(CI)F /t > nul
+// 或是
+for %%D in (Desktop Documents Downloads Pictures Videos Music) do (
+    takeown /f "D:\Users\舊使用者名稱\%%D" /r /d y > nul
+    icacls "D:\Users\舊使用者名稱\%%D" /grant "%USERNAME%":(OI)(CI)F /t > nul
+)
+` },
 
+
+           
             { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" 
 winget uninstall --name "Acer Configuration Manager" 
 winget uninstall --name "ControlCenter Service"` },
