@@ -37,8 +37,8 @@ start ms-settings:regionlanguage` },
 reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanWorkstation\\Parameters" /v ExtendedSessTimeout /t REG_DWORD /d 10 /f` },
             { title: "設定 C:\\test 權限", code: `icacls c:\\test /grant everyone:F /T /C /Q` },
             { title: "設定 D:\\User 權限", code: `
-takeown /f "C:\Users\test" /r /d y
-icacls "C:\Users\test" /grant "%USERNAME%":(OI)(CI)F
+takeown /f "D:\\Users\\test" /r /d y
+icacls "D:\\Users\\test" /grant "%USERNAME%":(OI)(CI)F
 ` },
            
             { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" 
