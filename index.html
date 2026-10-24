@@ -41,8 +41,8 @@ takeown /f "D:\Users" /r /d y > nul
 icacls "D:\Users" /grant "%USERNAME%":(OI)(CI)F /t > nul
 # 或是
 for %%D in (Desktop Documents Downloads Pictures Videos Music) do (
-    takeown /f "D:\Users\舊使用者名稱\%%D" /r /d y > nul
-    icacls "D:\Users\舊使用者名稱\%%D" /grant "%USERNAME%":(OI)(CI)F /t > nul
+    takeown /f "C:\\Users\\test" /r /d y > nul
+    icacls "C:\\Users\\test /grant "%USERNAME%":(OI)(CI)F /t > nul
 )
 ` },
            
