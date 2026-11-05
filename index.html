@@ -82,7 +82,34 @@ reg unload HKLM\\OFFLINE`},
             { title: "印表機PORT_PS", code: `Get-PrinterPort | Where-Object { $_.PrinterHostAddress -like "*168*" } | Format-Table Name, PrinterHostAddress, SNMPEnabled, Protocol` },
             { title: "印表機PORT_UI", code: `printui /s /t1` },
 
-            { title: "日期時間", code: `echo %date:~0,4%.%date:~5,2%.%date:~8,2%.%time:~0,2%.%time:~3,2%.%time:~6,2%` }
+            { title: "日期時間", code: `echo %date:~0,4%.%date:~5,2%.%date:~8,2%.%time:~0,2%.%time:~3,2%.%time:~6,2%` },
+            { title: "自動重傳下載", code: `@echo off
+setlocal enabledelayedexpansion
+
+:: 設定下載網址與目標儲存檔名
+set "URL=https://ubuntu.cs.nycu.edu.tw/ubuntu-release/resolute/ubuntu-26.04.1-netboot-amd64.tar.gz"
+
+for /f "tokens=1 delims=?" %%a in ("%URL%") do set "CLEAN_URL=%%a"
+for %%i in ("%CLEAN_URL:/=" "%") do set "OUTFILE=%%~i"
+
+:RETRY
+echo :: [%date% %time%] 開始/繼續下載: %OUTFILE%
+
+:: 執行 curl，加入 -k（忽略憑證問題）、-C -（斷點續傳）、-o（指定輸出檔案）
+curl.exe -s -S -k -C - -o "%OUTFILE%" "%URL%" >nul
+
+:: 檢查執行結果
+if %errorlevel% equ 0 (
+    echo :: [%date% %time%] 下載成功完成！
+    goto END
+) else (
+    echo :: [%date% %time%] 下載中斷或失敗（錯誤碼: %errorlevel%），將於 10 秒後自動重試...
+    timeout /t 10 /nobreak >nul
+    goto RETRY
+)
+
+:END
+endlocal` }
         ];
 
         const container = document.getElementById('container');
