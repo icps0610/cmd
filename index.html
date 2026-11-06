@@ -83,6 +83,7 @@ reg unload HKLM\\OFFLINE`},
             { title: "印表機PORT_UI", code: `printui /s /t1` },
 
             { title: "日期時間", code: `echo %date:~0,4%.%date:~5,2%.%date:~8,2%.%time:~0,2%.%time:~3,2%.%time:~6,2%` },
+            { title: "區網ping", code: `for /l %i in (1,1,254) do ping -n 1 -w 1 196.7.0.%i` },
             { title: "自動重傳下載", code: `@echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
