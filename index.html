@@ -153,11 +153,11 @@ ipconfig /renew
 
 pktmon stop
 pktmon filter remove` },
-            { title: "pktmon 流量", code: `pktmon stop
+            { title: "pktmon 流量監控", code: `pktmon stop
 pktmon filter remove
 pktmon filter add -i 168.95.1.1 -p 53
 pktmon filter add -i 1.1.1.1 -p 443
-pktmon start --etw -m real-time | findstr "ethertype"
+pktmon start --etw -m real-time | findstr "元件 77 ethertype"
 
 nslookup google.com 168.95.1.1
 curl -I https://www.google.com --connect-timeout 3
