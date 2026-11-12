@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 指令工具</title>
+</head>
+<body>
+    <h1><a href="https://github.com/icps0610/cmd" style="color: inherit; text-decoration: none;">常用指令</a></h1>
+    <div class="header-controls">
+        <button class="download-btn" onclick="downloadBatch()">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+            下載 cmd.txt
+        </button>
+    </div>
+
+    <div class="grid-container" id="container"></div>
+
+    <script>
+        const commands = [
+            { title: "恢復舊版右鍵選單", code: `reg add "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32" /f /ve` },
+            { title: "開啟副檔名及隱藏檔案", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v Hidden /t REG_DWORD /d 1 /f & reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v ShowSuperHidden /t REG_DWORD /d 1 /f` },
+            { title: "恢復副檔名", code: `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v HideFileExt /t REG_DWORD /d 1 /f` },
+            { title: "工具列/開啟電源/輸入法/地區設定", code: `ms-settings:taskbar
+pause
+start ms-settings:powersleep 
+pause
+start ms-settings:typing 
+pause
+start ms-settings:regionlanguage` },
+            { title: "關閉 UAC", code: `reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA /t REG_DWORD /d 0 /f` },
+            { title: "關閉搜尋", code: `sc stop "WSearch" & sc config "WSearch" start= disabled` },
+            { title: "關閉無密碼登入", code: `reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\PasswordLess\\Device" /v DevicePasswordLessBuildVersion /t REG_DWORD /d 0 /f` },
+            { title: "縮短網路磁碟機逾時等待", code: `reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanWorkstation\\Parameters" /v SessTimeout /t REG_DWORD /d 10 /f
+reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanWorkstation\\Parameters" /v ExtendedSessTimeout /t REG_DWORD /d 10 /f` },
+            { title: "設定 C:\\test 權限", code: `icacls c:\\test /grant everyone:F /T /C /Q` },
+            { title: "設定 D:\\User 權限", code: `
+takeown /f "D:\\Users\\test" /r /d y
+icacls "D:\\Users\\test" /grant "%USERNAME%":(OI)(CI)F
+` },
+            { title: "移除 Acer 程式", code: `winget uninstall --name "Acer Product Registration" 
+winget uninstall --name "Acer Configuration Manager" 
+winget uninstall --name "ControlCenter Service"` },
+            { title: "移除微軟程式 (OneNote/OneDrive/Teams/Copilot/Dropbox)", code: `winget uninstall --name "Microsoft OneNote - zh-tw" 
+winget uninstall --name "Microsoft OneDrive" 
+winget uninstall --name "Microsoft Teams" 
+winget uninstall --name "Copilot" 
+winget uninstall --name "Dropbox 優惠方案"
+winget uninstall --name "Microsoft 新聞" 
+winget uninstall --name "Microsoft 365 - zh-tw" 
+powershell "Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers"` },
+            { title: "移除WindowsAI", code: `https://github.com/zoicware/RemoveWindowsAI
+powershell "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))"` },
+            { title: "win相機", code: `start microsoft.windows.camera:` },
+            { title: "更新延長 (36500天)", code: `reg add "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f` },
+            { title: "檢視更新的KB", code: `powershell -Command "Get-HotFix | Select HotFixID,InstalledOn"` },
+            { title: "移除特定更新 (範例 KB:1234567)", code: `wusa /uninstall /kb:1234567 /quiet /norestart` },
+            { title: "清除 Windows Update 快取", code: `rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution` },
+            { title: "關閉更新服務", code: `sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled` },
+            { title: "關閉更新 (登錄檔)", code: `REG ADD "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /t REG_DWORD /d 3 /f` },
+            { title: "移除更新設定", code: `REG DELETE "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v AUOptions /f` },
+            { title: "啟動", code: `powershell "irm https://get.activated.win | iex"` },
+            { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` },
+            { title: "建立本機帳號", code: `[shift+F10] start ms-cxh:localonly 或者 oobe\\bypassnro` },
+            { title: "系統稽核模式", code: `[Ctrl + Shift + F3]` },
+            { title: "新增帳號", code: `net user user passwd /add
+net localgroup administrators user /add` },
+            { title: "PE下操作: 帳號", code: `reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SAM
+reg query HKLM\\OFFLINE\\SAM\\Domains\\Account\\Users\\Names
+reg unload HKLM\\OFFLINE` },
+            { title: "PE下操作: 查詢IP", code: `reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SYSTEM
+reg query "HKLM\\OFFLINE\\ControlSet001\\Services\\Tcpip\\Parameters\\Interfaces" /s 
+reg unload HKLM\\OFFLINE` },
+            { title: "移除印表機", code: `電腦\\HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Print\\Printers\\` },
+            { title: "印表機PORT_PS", code: `Get-PrinterPort | Where-Object { $_.PrinterHostAddress -like "*168*" } | Format-Table Name, PrinterHostAddress, SNMPEnabled, Protocol` },
+            { title: "印表機PORT_UI", code: `printui /s /t1` },
+            { title: "日期時間", code: `echo %date:~0,4%.%date:~5,2%.%date:~8,2%.%time:~0,2%.%time:~3,2%.%time:~6,2%` },
+            { title: "區網ping", code: `for /l %i in (1,1,254) do ping -n 1 -w 1 1.2.3.%i` },
+            { title: "紀錄ping", code: `while ($true) { ping.exe -n 1 8.8.8.8 | Where-Object { $_ -match "TTL=|逾時|timed out|無法連線|unreachable" } | ForEach-Object { $line = "{0:yyyy-MM-dd HH:mm:ss} - {1}" -f (Get-Date), $_; Write-Host $line; Add-Content -Path "log.txt" -Value $line -Encoding utf8 }; Start-Sleep -Seconds 60 }` },
+            { title: "重複IP", code: `wevtutil qe System /q:"*[System[Provider[@Name='Tcpip'] and (EventID=4198 or EventID=4199)]]" /f:text /c:5` },
+            { title: "DHCP 派發紀錄(顯示等級2,3)", code: `wevtutil qe System /q:"*[System[Provider[@Name='Microsoft-Windows-DHCP-Client'] and (Level=2 or Level=3)]]" /f:text /rd:true /c:5` },
+            { title: "磁區操作", code: `:: 解除隱藏
+(echo select volume 1 & echo remove letter=W noerr & echo attributes volume set hidden) | diskpart
+:: 隱藏
+(echo select volume 1 & echo attributes volume clear hidden & echo assign letter=W) | diskpart` },
+            { title: "增加隱藏磁區", code: `(echo select volume 1 & echo remove letter=W noerr & echo attributes volume set hidden) | diskpart` },
+            { title: "自動重傳下載", code: `curl.exe -s -S -L -k -C - --retry 999 --retry-delay 10 --retry-all-errors -o "ubuntu-26.04.1-netboot-amd64.tar.gz" "https://ubuntu.cs.nycu.edu.tw/ubuntu-release/resolute/ubuntu-26.04.1-netboot-amd64.tar.gz"` },
+            { title: "DNS查詢", code: `nslookup google.com
+nslookup google.com 8.8.8.8` },
+            { title: "連線IP PORT測試", code: `powershell "Test-NetConnection 142.251.43.14 -Port 443"` },
+            { title: "掃瞄DHCP數量", code: `# 1. 暫時允許 UDP Port 68 入站 (避免被 Windows 防火牆攔截)
+New-NetFirewallRule -DisplayName "Temp_DHCP_Test" -Direction Inbound -Protocol UDP -LocalPort 68 -Action Allow -ErrorAction SilentlyContinue | Out-Null
+
+# 2. 自動取得目前連線網卡的真實 IP 與真實 MAC
+$netConfig = Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway -ne $null } | Select-Object -First 1
+$localIP = $netConfig.IPv4Address.IPAddress
+$macString = ($netConfig.NetAdapter.MacAddress -replace '-', '')
+$macBytes = [byte[]]::new(6)
+for ($i = 0; $i -lt 6; $i++) {
+    $macBytes[$i] = [Convert]::ToByte($macString.Substring($i * 2, 2), 16)
+}
+Write-Host "使用本機真實 IP ($localIP) 與 MAC ($($netConfig.NetAdapter.MacAddress)) 發送探測..." -ForegroundColor Cyan
+
+# 3. 建立 Socket 並設定 ReuseAddress (繞過系統 Port 68 獨佔限制)
+$socket = New-Object System.Net.Sockets.Socket([System.Net.Sockets.AddressFamily]::InterNetwork, [System.Net.Sockets.SocketType]::Dgram, [System.Net.Sockets.ProtocolType]::Udp)
+$socket.SetSocketOption([System.Net.Sockets.SocketOptionLevel]::Socket, [System.Net.Sockets.SocketOptionName]::ReuseAddress, $true)
+$socket.SetSocketOption([System.Net.Sockets.SocketOptionLevel]::Socket, [System.Net.Sockets.SocketOptionName]::Broadcast, $true)
+$socket.ReceiveTimeout = 3000
+$socket.Bind((New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Parse($localIP), 68)))
+
+# 4. 組合 DHCP Inform 封包 (Option 53 = 8，填入真實 IP 與真實 MAC)
+$packet = New-Object byte[] 244
+$packet[0] = 1; $packet[1] = 1; $packet[2] = 6; $packet[3] = 0
+$packet[4] = 0x12; $packet[5] = 0x34; $packet[6] = 0x56; $packet[7] = 0x78
+# 填入本機真實 IP (ciaddr: bytes 12-15)
+$ipBytes = [System.Net.IPAddress]::Parse($localIP).GetAddressBytes()
+[Array]::Copy($ipBytes, 0, $packet, 12, 4)
+# 填入本機真實 MAC (chaddr: bytes 28-33)
+[Array]::Copy($macBytes, 0, $packet, 28, 6)
+# Magic Cookie
+$packet[236] = 99; $packet[237] = 130; $packet[238] = 83; $packet[239] = 99
+# Option 53: DHCP Inform (值為 8) + 結束標記 (255)
+$packet[240] = 53; $packet[241] = 1; $packet[242] = 8; $packet[243] = 255
+
+# 5. 發送廣播並監聽回應
+$broadcastEp = New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Broadcast, 67)
+[void]$socket.SendTo($packet, $broadcastEp)
+
+$sw = [Diagnostics.Stopwatch]::StartNew()
+$count = 0
+$buffer = New-Object byte[] 1024
+while ($sw.ElapsedMilliseconds -lt 3500) {
+    try {
+        $recvEp = New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Any, 0)
+        $len = $socket.ReceiveFrom($buffer, [ref]$recvEp)
+        $count++
+        Write-Host "[$count] 抓到 DHCP 伺服器回應！ 伺服器 IP: $($recvEp.Address)" -ForegroundColor Yellow
+    } catch {
+        break
+    }
+}
+$socket.Close()
+
+# 6. 清除剛才建立的暫時防火牆規則
+Remove-NetFirewallRule -DisplayName "Temp_DHCP_Test" -ErrorAction SilentlyContinue | Out-Null
+Write-Host "掃描結束，共發現 $count 台 DHCP 伺服器。" -ForegroundColor Green` },
+            { title: "內建抓包 pktmon", code: `pktmon filter remove
+pktmon filter add -i 192.168.0.200 add -p 67 68
+pktmon start --etw -m real-time
+
+ipconfig /release
+ipconfig /renew
+
+pktmon stop
+pktmon filter remove` },
+            { title: "pktmon 流量", code: `pktmon stop
+pktmon filter remove
+pktmon filter add -i 192.168.0.200 -p 53
+pktmon filter add -i 192.168.0.200 -p 443
+pktmon start --etw -m real-time --comp nics | findstr "ethertype"
+
+nslookup google.com 168.95.1.1
+curl -I https://www.google.com --connect-timeout 3
+
+pktmon stop
+pktmon filter remove` }
+        ];
+
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'CMD_SYNC_FROM_INDEX', commands: commands }, '*');
+        }
+
+        const container = document.getElementById('container');
+        commands.forEach(cmd => {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = `
+                <div class="item-label">${cmd.title}</div>
+                <button class="copy-btn" onclick="copyText(this)">複製</button>
+                <pre class="code-block">${cmd.code}</pre>
+            `;
+            container.appendChild(card);
+        });
+
+        function copyText(btn) {
+            const code = btn.nextElementSibling.innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const original = btn.innerText;
+                btn.innerText = "OK";
+                btn.classList.add("copied");
+                setTimeout(() => {
+                    btn.innerText = original;
+                    btn.classList.remove("copied");
+                }, 1500);
+            });
+        }
+
+        function downloadBatch() {
+            let content = "@echo off\r\nchcp 65001 > nul\r\n\r\n";
+            commands.forEach(cmd => {
+                content += `:: ${cmd.title}\r\n${cmd.code}\r\n\r\n`;
+            });
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cmd.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+<style>
+    :root {
+        --bg-color: #121212;
+        --item-bg: #1e1e1e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --accent: #4caf50;
+        --code-bg: #000000;
+        --border: #333;
+    }
+    body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .header-controls {
+        width: 100%;
+        max-width: 1200px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .download-btn {
+        background-color: #2196F3;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+    .download-btn:hover { background-color: #1976D2; }
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+        gap: 15px;
+        width: 100%;
+        max-width: 1600px;
+    }
+    @media (max-width: 768px) {
+        .grid-container { grid-template-columns: 1fr; }
+    }
+    .item-card {
+        background-color: var(--item-bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    .item-label {
+        font-size: 0.95rem;
+        color: var(--accent);
+        margin-bottom: 8px;
+        font-weight: 600;
+        padding-right: 60px;
+    }
+    .code-block {
+        background-color: var(--code-bg);
+        padding: 10px;
+        border-radius: 4px;
+        font-family: 'Consolas', monospace;
+        font-size: 0.85rem;
+        color: #dcdcdc;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        margin: 0;
+    }
+    .copy-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #333;
+        color: white;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 4px 12px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .copy-btn:hover { background-color: #555; }
+    .copy-btn.copied { background-color: var(--accent); border-color: var(--accent); }
+</style>
+</html>

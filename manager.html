@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 指令管理編輯器</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --card-bg: #252526;
+            --card-border: #333333;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #4caf50;
+            --accent-hover: #45a049;
+            --primary: #2196F3;
+            --primary-hover: #1976D2;
+            --danger: #f44336;
+            --danger-hover: #d32f2f;
+            --code-bg: #000000;
+            --border: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        /* 頂部標題與狀態 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            color: #fff;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: #2a2a2a;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #888;
+        }
+        .status-dot.active { background: #4caf50; }
+        .status-dot.file-mode { background: #2196F3; }
+
+        /* 工具列 */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: var(--panel-bg);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            background: #141414;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 260px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-success { background: var(--accent); color: white; }
+        .btn-success:hover { background: var(--accent-hover); }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: var(--danger-hover); }
+
+        .btn-secondary { background: #333; color: #ddd; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; color: #fff; }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+        }
+
+        /* 提示通知條 */
+        .notice-banner {
+            background: #1a2733;
+            border: 1px solid #204b73;
+            color: #b8dcff;
+            padding: 10px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 指令卡片列表 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            .search-input {
+                width: 100%;
+            }
+        }
+
+        .item-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.15s, border-color 0.15s, opacity 0.15s, box-shadow 0.15s;
+            cursor: grab;
+        }
+
+        .item-card:active {
+            cursor: grabbing;
+        }
+
+        .item-card.dragging {
+            opacity: 0.35;
+            border: 2px dashed var(--primary);
+            transform: scale(0.98);
+        }
+
+        .item-card.drag-over {
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 14px rgba(76, 175, 80, 0.45);
+            transform: translateY(-3px);
+        }
+
+        .drag-handle {
+            display: inline-block;
+            cursor: grab;
+            color: #666;
+            margin-right: 6px;
+            font-size: 1.1rem;
+            user-select: none;
+            vertical-align: middle;
+        }
+
+        .drag-handle:hover {
+            color: var(--primary);
+        }
+
+        .card-actions, .code-block {
+            cursor: auto;
+        }
+
+        .item-card:hover {
+            border-color: #555;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .item-title {
+            font-size: 1rem;
+            color: var(--accent);
+            font-weight: 600;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .code-block {
+            background-color: var(--code-bg);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+            color: #dcdcdc;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0;
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid #222;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* 模態彈窗 (新增/編輯) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-dialog {
+            background: var(--panel-bg);
+            border: 1px solid #444;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: #fff;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .close-btn:hover { color: #fff; }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ddd;
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .form-input {
+            background: #141414;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+        }
+
+        .form-textarea {
+            background: #141414;
+            border: 1px solid #444;
+            color: #00ff66;
+            font-family: 'Consolas', monospace;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            min-height: 180px;
+            resize: vertical;
+            line-height: 1.5;
+            tab-size: 4;
+        }
+
+        .form-textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .alert-box {
+            background: #252317;
+            border: 1px solid #63501a;
+            color: #ecd58b;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+
+        /* 複製提示浮窗 */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+            z-index: 2000;
+            pointer-events: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success { background: #2e7d32; }
+        .toast.error { background: #c62828; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 頂部標題列 -->
+        <header class="header">
+            <div class="header-title">
+                <h1>Windows 指令編輯管理員</h1>
+                <div class="status-badge" id="statusBadge">
+                    <span class="status-dot active" id="statusDot"></span>
+                    <span id="statusText">目標：E:/script/github/cmd/index.html</span>
+                </div>
+            </div>
+            <div class="toolbar-group">
+                <button class="btn btn-success" id="btnSaveAll" onclick="saveAllChanges()">
+                    💾 儲存並寫入 index.html
+                </button>
+            </div>
+        </header>
+
+        <!-- 常用工具列 -->
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="btn btn-primary" onclick="openEditModal(-1)">
+                    ➕ 新增指令
+                </button>
+                <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋標題或指令內容..." oninput="filterCommands()">
+                <span id="commandBadge" style="font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap;"></span>
+            </div>
+        </div>
+
+        <!-- 指令卡片列表 -->
+        <div class="grid-container" id="cardsContainer"></div>
+    </div>
+
+    <!-- 編輯/新增 Modal 視窗 -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h2 id="modalTitle">新增指令</h2>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">指令標題 (Title)</label>
+                <input type="text" id="inputTitle" class="form-input" placeholder="指令標題">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">指令內容 (Code)</label>
+                <div class="form-hint">直接在此貼上原始代碼</div>
+                <textarea id="inputCode" class="form-textarea" placeholder="在此貼上指令內容..." spellcheck="false"></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitEditForm()">確認儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示通知浮窗 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 全域變數
+        const defaultCommands = [
+  {
+    "title": "恢復舊版右鍵選單",
+    "code": "reg add \"HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32\" /f /ve"
+  },
+  {
+    "title": "開啟副檔名及隱藏檔案",
+    "code": "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v HideFileExt /t REG_DWORD /d 0 /f & reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v Hidden /t REG_DWORD /d 1 /f & reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowSuperHidden /t REG_DWORD /d 1 /f"
+  },
+  {
+    "title": "恢復副檔名",
+    "code": "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v HideFileExt /t REG_DWORD /d 1 /f"
+  },
+  {
+    "title": "工具列/開啟電源/輸入法/地區設定",
+    "code": "ms-settings:taskbar\npause\nstart ms-settings:powersleep \npause\nstart ms-settings:typing \npause\nstart ms-settings:regionlanguage"
+  },
+  {
+    "title": "關閉 UAC",
+    "code": "reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System /v EnableLUA /t REG_DWORD /d 0 /f"
+  },
+  {
+    "title": "關閉搜尋",
+    "code": "sc stop \"WSearch\" & sc config \"WSearch\" start= disabled"
+  },
+  {
+    "title": "關閉無密碼登入",
+    "code": "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\PasswordLess\\Device\" /v DevicePasswordLessBuildVersion /t REG_DWORD /d 0 /f"
+  },
+  {
+    "title": "縮短網路磁碟機逾時等待",
+    "code": "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanWorkstation\\Parameters\" /v SessTimeout /t REG_DWORD /d 10 /f\nreg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanWorkstation\\Parameters\" /v ExtendedSessTimeout /t REG_DWORD /d 10 /f"
+  },
+  {
+    "title": "設定 C:\\test 權限",
+    "code": "icacls c:\\test /grant everyone:F /T /C /Q"
+  },
+  {
+    "title": "設定 D:\\User 權限",
+    "code": "\ntakeown /f \"D:\\Users\\test\" /r /d y\nicacls \"D:\\Users\\test\" /grant \"%USERNAME%\":(OI)(CI)F\n"
+  },
+  {
+    "title": "移除 Acer 程式",
+    "code": "winget uninstall --name \"Acer Product Registration\" \nwinget uninstall --name \"Acer Configuration Manager\" \nwinget uninstall --name \"ControlCenter Service\""
+  },
+  {
+    "title": "移除微軟程式 (OneNote/OneDrive/Teams/Copilot/Dropbox)",
+    "code": "winget uninstall --name \"Microsoft OneNote - zh-tw\" \nwinget uninstall --name \"Microsoft OneDrive\" \nwinget uninstall --name \"Microsoft Teams\" \nwinget uninstall --name \"Copilot\" \nwinget uninstall --name \"Dropbox 優惠方案\"\nwinget uninstall --name \"Microsoft 新聞\" \nwinget uninstall --name \"Microsoft 365 - zh-tw\" \npowershell \"Get-AppPackage -AllUsers *OfficeHub* | Remove-AppxPackage -Allusers\""
+  },
+  {
+    "title": "移除WindowsAI",
+    "code": "https://github.com/zoicware/RemoveWindowsAI\npowershell \"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))\""
+  },
+  {
+    "title": "win相機",
+    "code": "start microsoft.windows.camera:"
+  },
+  {
+    "title": "更新延長 (36500天)",
+    "code": "reg add \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings\" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f"
+  },
+  {
+    "title": "檢視更新的KB",
+    "code": "powershell -Command \"Get-HotFix | Select HotFixID,InstalledOn\""
+  },
+  {
+    "title": "移除特定更新 (範例 KB:1234567)",
+    "code": "wusa /uninstall /kb:1234567 /quiet /norestart"
+  },
+  {
+    "title": "清除 Windows Update 快取",
+    "code": "rd /s /q %windir%\\SoftwareDistribution & md %windir%\\SoftwareDistribution"
+  },
+  {
+    "title": "關閉更新服務",
+    "code": "sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled"
+  },
+  {
+    "title": "關閉更新 (登錄檔)",
+    "code": "REG ADD \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU\" /v AUOptions /t REG_DWORD /d 3 /f"
+  },
+  {
+    "title": "移除更新設定",
+    "code": "REG DELETE \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU\" /v AUOptions /f"
+  },
+  {
+    "title": "啟動",
+    "code": "powershell \"irm https://get.activated.win | iex\""
+  },
+  {
+    "title": "Sysprep",
+    "code": "C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown"
+  },
+  {
+    "title": "建立本機帳號",
+    "code": "[shift+F10] start ms-cxh:localonly 或者 oobe\\bypassnro"
+  },
+  {
+    "title": "系統稽核模式",
+    "code": "[Ctrl + Shift + F3]"
+  },
+  {
+    "title": "新增帳號",
+    "code": "net user user passwd /add\nnet localgroup administrators user /add"
+  },
+  {
+    "title": "PE下操作: 帳號",
+    "code": "reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SAM\nreg query HKLM\\OFFLINE\\SAM\\Domains\\Account\\Users\\Names\nreg unload HKLM\\OFFLINE"
+  },
+  {
+    "title": "PE下操作: 查詢IP",
+    "code": "reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SYSTEM\nreg query \"HKLM\\OFFLINE\\ControlSet001\\Services\\Tcpip\\Parameters\\Interfaces\" /s \nreg unload HKLM\\OFFLINE"
+  },
+  {
+    "title": "移除印表機",
+    "code": "電腦\\HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Print\\Printers\\"
+  },
+  {
+    "title": "印表機PORT_PS",
+    "code": "Get-PrinterPort | Where-Object { $_.PrinterHostAddress -like \"*168*\" } | Format-Table Name, PrinterHostAddress, SNMPEnabled, Protocol"
+  },
+  {
+    "title": "印表機PORT_UI",
+    "code": "printui /s /t1"
+  },
+  {
+    "title": "日期時間",
+    "code": "echo %date:~0,4%.%date:~5,2%.%date:~8,2%.%time:~0,2%.%time:~3,2%.%time:~6,2%"
+  },
+  {
+    "title": "區網ping",
+    "code": "for /l %i in (1,1,254) do ping -n 1 -w 1 1.2.3.%i"
+  },
+  {
+    "title": "紀錄ping",
+    "code": "while ($true) { ping.exe -n 1 8.8.8.8 | Where-Object { $_ -match \"TTL=|逾時|timed out|無法連線|unreachable\" } | ForEach-Object { $line = \"{0:yyyy-MM-dd HH:mm:ss} - {1}\" -f (Get-Date), $_; Write-Host $line; Add-Content -Path \"log.txt\" -Value $line -Encoding utf8 }; Start-Sleep -Seconds 60 }"
+  },
+  {
+    "title": "重複IP",
+    "code": "wevtutil qe System /q:\"*[System[Provider[@Name='Tcpip'] and (EventID=4198 or EventID=4199)]]\" /f:text /c:5"
+  },
+  {
+    "title": "消除隱藏磁區",
+    "code": "(echo select volume 1 & echo attributes volume clear hidden & echo assign letter=W) | diskpart"
+  },
+  {
+    "title": "增加隱藏磁區",
+    "code": "(echo select volume 1 & echo remove letter=W noerr & echo attributes volume set hidden) | diskpart"
+  },
+  {
+    "title": "自動重傳下載",
+    "code": "curl.exe -s -S -L -k -C - --retry 999 --retry-delay 10 --retry-all-errors -o \"ubuntu-26.04.1-netboot-amd64.tar.gz\" \"https://ubuntu.cs.nycu.edu.tw/ubuntu-release/resolute/ubuntu-26.04.1-netboot-amd64.tar.gz\""
+  },
+  {
+    "title": "DHCP 派發紀錄(顯示等級2,3)",
+    "code": "wevtutil qe System /q:\"*[System[Provider[@Name='Microsoft-Windows-DHCP-Client'] and (Level=2 or Level=3)]]\" /f:text /rd:true /c:5"
+  }
+];
+        const TARGET_PATH = "E:/script/github/cmd/index.html";
+        let commands = JSON.parse(JSON.stringify(defaultCommands));
+        let currentEditIndex = -1;
+        let fileHandle = null;
+        let originalHtmlTemplate = "";
+
+        // 頁面載入初始化：自動載入最新 E:/script/github/cmd/index.html 資料
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 監聽來自隱藏 iframe (E:/script/github/cmd/index.html) 的即時資料同步
+            window.addEventListener('message', (e) => {
+                if (e.data && e.data.type === 'CMD_SYNC_FROM_INDEX' && Array.isArray(e.data.commands)) {
+                    commands = e.data.commands;
+                    renderCommands(document.getElementById('searchInput').value);
+                    updateStatus(true, `🟢 已載入最新 ${TARGET_PATH}`);
+                }
+            });
+
+            renderCommands();
+
+            // 載入最新 E:/script/github/cmd/index.html
+            await loadLatestIndexHtml();
+        });
+
+        // 解析 index.html 字串中的 commands 陣列
+        function parseIndexHtml(html, silent = false) {
+            originalHtmlTemplate = html;
+            const match = html.match(/const\s+commands\s*=\s*(\[[\s\S]*?\n\s*\]);/);
+            if (match) {
+                try {
+                    commands = new Function("return " + match[1])();
+                    localStorage.setItem('cmd_latest_commands', JSON.stringify(commands));
+                    renderCommands();
+                    if (!silent) showToast(`已載入最新 index.html (${commands.length} 個指令)`, "success");
+                } catch (err) {
+                    console.error("解析 commands 失敗:", err);
+                }
+            }
+        }
+
+        let draggedIndex = null;
+
+        // 渲染指令卡片 (支援滑鼠拖拉排序)
+        function renderCommands(filterKeyword = "") {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = "";
+
+            const kw = filterKeyword.trim().toLowerCase();
+            let visibleCount = 0;
+
+            commands.forEach((cmd, index) => {
+                const title = cmd.title || "";
+                const code = cmd.code || "";
+
+                if (kw && !title.toLowerCase().includes(kw) && !code.toLowerCase().includes(kw)) {
+                    return;
+                }
+                visibleCount++;
+
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.draggable = true;
+                card.dataset.index = index;
+
+                // 拖曳事件處理
+                card.addEventListener('dragstart', (e) => {
+                    draggedIndex = index;
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', index);
+                    setTimeout(() => card.classList.add('dragging'), 0);
+                });
+
+                card.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (draggedIndex !== null && draggedIndex !== index) {
+                        card.classList.add('drag-over');
+                    }
+                });
+
+                card.addEventListener('dragleave', () => {
+                    card.classList.remove('drag-over');
+                });
+
+                card.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    card.classList.remove('drag-over');
+                    if (draggedIndex !== null && draggedIndex !== index) {
+                        const moved = commands.splice(draggedIndex, 1)[0];
+                        commands.splice(index, 0, moved);
+                        renderCommands(document.getElementById('searchInput').value);
+                        await saveAllChanges();
+                    }
+                });
+
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                    document.querySelectorAll('.item-card').forEach(c => c.classList.remove('drag-over'));
+                    draggedIndex = null;
+                });
+
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'card-header';
+
+                const titleEl = document.createElement('div');
+                titleEl.className = 'item-title';
+
+                const handleSpan = document.createElement('span');
+                handleSpan.className = 'drag-handle';
+                handleSpan.title = '按住可拖曳卡片調整順序';
+                handleSpan.innerText = '⠿';
+
+                const textSpan = document.createElement('span');
+                textSpan.innerText = `${index + 1}. ${title}`;
+
+                titleEl.appendChild(handleSpan);
+                titleEl.appendChild(textSpan);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'card-actions';
+
+                // 上移按鈕
+                const upBtn = document.createElement('button');
+                upBtn.className = 'btn btn-secondary btn-sm';
+                upBtn.title = '上移';
+                upBtn.innerText = '↑';
+                upBtn.disabled = index === 0;
+                upBtn.onclick = () => moveCommand(index, -1);
+
+                // 下移按鈕
+                const downBtn = document.createElement('button');
+                downBtn.className = 'btn btn-secondary btn-sm';
+                downBtn.title = '下移';
+                downBtn.innerText = '↓';
+                downBtn.disabled = index === commands.length - 1;
+                downBtn.onclick = () => moveCommand(index, 1);
+
+                // 複製按鈕
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'btn btn-secondary btn-sm';
+                copyBtn.title = '複製代碼';
+                copyBtn.innerText = '複製';
+                copyBtn.onclick = () => copyCodeText(code, copyBtn);
+
+                // 編輯按鈕
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-primary btn-sm';
+                editBtn.title = '編輯內容';
+                editBtn.innerText = '編輯';
+                editBtn.onclick = () => openEditModal(index);
+
+                // 刪除按鈕
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn btn-danger btn-sm';
+                delBtn.title = '刪除此項目';
+                delBtn.innerText = '刪除';
+                delBtn.onclick = () => deleteCommand(index);
+
+                actionsDiv.appendChild(upBtn);
+                actionsDiv.appendChild(downBtn);
+                actionsDiv.appendChild(copyBtn);
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(delBtn);
+
+                headerDiv.appendChild(titleEl);
+                headerDiv.appendChild(actionsDiv);
+
+                const pre = document.createElement('pre');
+                pre.className = 'code-block';
+                pre.innerText = code;
+
+                card.appendChild(headerDiv);
+                card.appendChild(pre);
+                container.appendChild(card);
+            });
+
+            const countText = `共 ${commands.length} 個指令` + (kw ? ` (篩選出 ${visibleCount} 個)` : '');
+            if (document.getElementById('commandCountInfo')) document.getElementById('commandCountInfo').innerText = countText;
+            if (document.getElementById('commandBadge')) document.getElementById('commandBadge').innerText = countText;
+        }
+
+        // 移動指令順序
+        async function moveCommand(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= commands.length) return;
+            const temp = commands[index];
+            commands[index] = commands[newIndex];
+            commands[newIndex] = temp;
+            renderCommands(document.getElementById('searchInput').value);
+            await saveAllChanges();
+        }
+
+        // 刪除指令
+        async function deleteCommand(index) {
+            const item = commands[index];
+            if (confirm(`確定要刪除「${item.title}」嗎？`)) {
+                commands.splice(index, 1);
+                renderCommands(document.getElementById('searchInput').value);
+                await saveAllChanges();
+            }
+        }
+
+        // 搜尋過濾
+        function filterCommands() {
+            const kw = document.getElementById('searchInput').value;
+            renderCommands(kw);
+        }
+
+        // 開啟編輯 Modal
+        function openEditModal(index) {
+            currentEditIndex = index;
+            const modal = document.getElementById('editModal');
+            const titleInput = document.getElementById('inputTitle');
+            const codeInput = document.getElementById('inputCode');
+            const modalTitle = document.getElementById('modalTitle');
+
+            if (index >= 0) {
+                modalTitle.innerText = `編輯指令 (#${index + 1})`;
+                titleInput.value = commands[index].title || "";
+                codeInput.value = commands[index].code || "";
+            } else {
+                modalTitle.innerText = "新增指令";
+                titleInput.value = "";
+                codeInput.value = "";
+            }
+
+            modal.classList.add('open');
+            setTimeout(() => titleInput.focus(), 50);
+        }
+
+        // 輸入快捷鍵：Tab 縮排與 Ctrl + Enter 儲存
+        document.getElementById('inputCode').addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+            } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                submitEditForm();
+            }
+        });
+
+        // 關閉 Modal
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('open');
+            currentEditIndex = -1;
+        }
+
+        // 提交編輯表單並直接寫入 index.html
+        async function submitEditForm() {
+            const title = document.getElementById('inputTitle').value.trim();
+            const code = document.getElementById('inputCode').value;
+
+            if (!title) {
+                alert("請輸入指令標題！");
+                document.getElementById('inputTitle').focus();
+                return;
+            }
+
+            if (!code.trim()) {
+                alert("請輸入指令內容！");
+                document.getElementById('inputCode').focus();
+                return;
+            }
+
+            if (currentEditIndex >= 0) {
+                commands[currentEditIndex] = { title, code };
+            } else {
+                commands.push({ title, code });
+            }
+
+            closeEditModal();
+            renderCommands(document.getElementById('searchInput').value);
+            await saveAllChanges();
+        }
+
+        // 核心轉義邏輯：將 JavaScript 物件轉換回原始 index.html 格式
+        function formatCommandsToJS(cmdList) {
+            const items = cmdList.map(cmd => {
+                const titleStr = JSON.stringify(cmd.title || "");
+                // 精確跳脫：
+                // 1. 反斜線 \ 轉成 \\
+                // 2. 反引號 ` 轉成 \`
+                // 3. 模板插值 ${ 轉成 \${
+                const safeCode = (cmd.code || "")
+                    .replace(/\\/g, '\\\\')
+                    .replace(/`/g, '\\`')
+                    .replace(/\${/g, '\\${');
+
+                return `            { title: ${titleStr}, code: \`${safeCode}\` }`;
+            });
+            return `const commands = [\n${items.join(',\n')}\n        ];`;
+        }
+
+        // 產生完整的 HTML 字串
+        function generateFullHtml() {
+            const newCommandsJs = formatCommandsToJS(commands);
+            return `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 指令工具</title>
+</head>
+<body>
+    <h1><a href="https://github.com/icps0610/cmd" style="color: inherit; text-decoration: none;">常用指令</a></h1>
+    <div class="header-controls">
+        <button class="download-btn" onclick="downloadBatch()">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+            下載 cmd.txt
+        </button>
+    </div>
+
+    <div class="grid-container" id="container"></div>
+
+    <script>
+        ${newCommandsJs}
+
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'CMD_SYNC_FROM_INDEX', commands: commands }, '*');
+        }
+
+        const container = document.getElementById('container');
+        commands.forEach(cmd => {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = \`
+                <div class="item-label">\${cmd.title}</div>
+                <button class="copy-btn" onclick="copyText(this)">複製</button>
+                <pre class="code-block">\${cmd.code}</pre>
+            \`;
+            container.appendChild(card);
+        });
+
+        function copyText(btn) {
+            const code = btn.nextElementSibling.innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const original = btn.innerText;
+                btn.innerText = "OK";
+                btn.classList.add("copied");
+                setTimeout(() => {
+                    btn.innerText = original;
+                    btn.classList.remove("copied");
+                }, 1500);
+            });
+        }
+
+        function downloadBatch() {
+            let content = "@echo off\\r\\nchcp 65001 > nul\\r\\n\\r\\n";
+            commands.forEach(cmd => {
+                content += \`:: \${cmd.title}\\r\\n\${cmd.code}\\r\\n\\r\\n\`;
+            });
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cmd.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    <\/script>
+</body>
+<style>
+    :root {
+        --bg-color: #121212;
+        --item-bg: #1e1e1e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --accent: #4caf50;
+        --code-bg: #000000;
+        --border: #333;
+    }
+    body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .header-controls {
+        width: 100%;
+        max-width: 1200px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .download-btn {
+        background-color: #2196F3;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+    .download-btn:hover { background-color: #1976D2; }
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+        gap: 15px;
+        width: 100%;
+        max-width: 1600px;
+    }
+    @media (max-width: 768px) {
+        .grid-container { grid-template-columns: 1fr; }
+    }
+    .item-card {
+        background-color: var(--item-bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    .item-label {
+        font-size: 0.95rem;
+        color: var(--accent);
+        margin-bottom: 8px;
+        font-weight: 600;
+        padding-right: 60px;
+    }
+    .code-block {
+        background-color: var(--code-bg);
+        padding: 10px;
+        border-radius: 4px;
+        font-family: 'Consolas', monospace;
+        font-size: 0.85rem;
+        color: #dcdcdc;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        margin: 0;
+    }
+    .copy-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #333;
+        color: white;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 4px 12px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .copy-btn:hover { background-color: #555; }
+    .copy-btn.copied { background-color: var(--accent); border-color: var(--accent); }
+</style>
+</html>`;
+        }
+
+        const PICKER_ID = 'windows_cmd_tool_workspace';
+
+        function updateStatus(isActive, text) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            if (statusDot) statusDot.className = isActive ? 'status-dot active' : 'status-dot';
+            if (statusText) statusText.innerText = text;
+        }
+
+        // 自動載入最新 E:/script/github/cmd/index.html 資料
+        async function loadLatestIndexHtml() {
+            // 1. 透過隱藏 iframe 讀取同目錄 index.html (在 file:// 下免 CORS 100% 即時載入最新 index.html)
+            try {
+                let syncFrame = document.getElementById('syncIndexFrame');
+                if (!syncFrame) {
+                    syncFrame = document.createElement('iframe');
+                    syncFrame.id = 'syncIndexFrame';
+                    syncFrame.style.display = 'none';
+                    document.body.appendChild(syncFrame);
+                }
+                syncFrame.src = 'index.html?t=' + Date.now();
+            } catch (e) {}
+
+            // 2. 嘗試從 IndexedDB 恢復已鎖定的 index.html 檔案控制代碼並讀取最新實體內容
+            try {
+                const saved = await getHandleFromDB('fileHandle');
+                if (saved) {
+                    fileHandle = saved;
+                    if (saved.queryPermission && (await saved.queryPermission({ mode: 'read' })) === 'granted') {
+                        const file = await saved.getFile();
+                        parseIndexHtml(await file.text(), true);
+                    }
+                    updateStatus(true, `🟢 目標：${TARGET_PATH} (直接寫入就緒)`);
+                    return;
+                }
+            } catch (e) {}
+
+            updateStatus(true, `🟢 目標：${TARGET_PATH}`);
+        }
+
+        // 儲存並直接寫入 E:/script/github/cmd/index.html
+        async function saveAllChanges() {
+            // 同步更新本機快取，確保重新打開時永遠是最新資料
+            localStorage.setItem('cmd_latest_commands', JSON.stringify(commands));
+
+            // 1. 若已有鎖定的 index.html 控制代碼，直接原地覆寫
+            if (fileHandle) {
+                try {
+                    if (fileHandle.queryPermission && (await fileHandle.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+                        const status = await fileHandle.requestPermission({ mode: 'readwrite' });
+                        if (status !== 'granted') {
+                            throw new Error('未取得寫入權限');
+                        }
+                    }
+                    const writable = await fileHandle.createWritable();
+                    const fullHtml = generateFullHtml();
+                    await writable.write(fullHtml);
+                    await writable.close();
+                    updateStatus(true, `🟢 已寫入：${TARGET_PATH}`);
+                    showToast(`🎉 已成功寫入 ${TARGET_PATH}！`, "success");
+                    return;
+                } catch (e) {
+                    console.warn("直接覆寫重試:", e);
+                }
+            }
+
+            // 2. 首次綁定 E:/script/github/cmd/index.html (綁定一次後永久直接寫入)
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        id: PICKER_ID,
+                        suggestedName: 'index.html',
+                        types: [{
+                            description: 'HTML 檔案',
+                            accept: { 'text/html': ['.html', '.htm'] }
+                        }]
+                    });
+                    fileHandle = handle;
+                    await saveHandleToDB('fileHandle', handle);
+                    const writable = await handle.createWritable();
+                    const fullHtml = generateFullHtml();
+                    await writable.write(fullHtml);
+                    await writable.close();
+                    updateStatus(true, `🟢 已寫入：${TARGET_PATH}`);
+                    showToast(`🎉 已成功寫入 ${TARGET_PATH}！`, "success");
+                    return;
+                } catch (e) {
+                    if (e.name === 'AbortError') {
+                        showToast("已取消儲存", "info");
+                        return;
+                    }
+                }
+            }
+
+            // 3. 備用自動下載
+            downloadUpdatedHTML();
+        }
+
+        function downloadUpdatedHTML() {
+            try {
+                const fullHtml = generateFullHtml();
+                const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'index.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 2000);
+                showToast(`📥 已下載 index.html 至 ${TARGET_PATH}！`, "success");
+            } catch (err) {
+                alert("儲存出錯: " + err.message);
+            }
+        }
+
+        // 浮窗訊息通知提示
+        function showToast(msg, type = "info") {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.innerText = msg;
+            toast.className = `toast show ${type}`;
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        // --- IndexedDB 永久鎖定 E:/script/github/cmd/index.html ---
+        function getDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('CmdPathDB', 1);
+                req.onupgradeneeded = (e) => { e.target.result.createObjectStore('handles'); };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function saveHandleToDB(key, handle) {
+            try {
+                const db = await getDB();
+                const tx = db.transaction('handles', 'readwrite');
+                tx.objectStore('handles').put(handle, key);
+            } catch (e) {}
+        }
+
+        async function getHandleFromDB(key) {
+            try {
+                const db = await getDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction('handles', 'readonly');
+                    const req = tx.objectStore('handles').get(key);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => resolve(null);
+                });
+            } catch (e) { return null; }
+        }
+
+        function copyCodeText(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = "已複製!";
+                btn.style.backgroundColor = "var(--accent)";
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.backgroundColor = "";
+                }, 1200);
+            }).catch(() => {
+                showToast("複製失敗，請手動選取", "error");
+            });
+        }
+    </script>
+</body>
+</html>
