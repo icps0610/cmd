@@ -88,6 +88,26 @@ reg unload HKLM\\OFFLINE` },
             { title: "DNS查詢", code: `nslookup google.com
 nslookup google.com 8.8.8.8` },
             { title: "連線IP PORT測試", code: `powershell "Test-NetConnection 142.251.43.14 -Port 443"` },
+            { title: "內建抓包 pktmon", code: `pktmon filter remove
+pktmon filter add -i 192.168.0.200 add -p 67 68
+pktmon start --etw -m real-time
+
+ipconfig /release
+ipconfig /renew
+
+pktmon stop
+pktmon filter remove` },
+            { title: "pktmon 流量監控", code: `pktmon stop
+pktmon filter remove
+pktmon filter add -i 168.95.1.1 -p 53
+pktmon filter add -i 1.1.1.1 -p 443
+pktmon start --etw -m real-time | findstr "元件 77 ethertype"
+
+nslookup google.com 168.95.1.1
+curl -I https://www.google.com --connect-timeout 3
+
+pktmon stop
+pktmon filter remove` },
             { title: "掃瞄DHCP數量", code: `# 1. 暫時允許 UDP Port 68 入站 (避免被 Windows 防火牆攔截)
 New-NetFirewallRule -DisplayName "Temp_DHCP_Test" -Direction Inbound -Protocol UDP -LocalPort 68 -Action Allow -ErrorAction SilentlyContinue | Out-Null
 
@@ -143,27 +163,7 @@ $socket.Close()
 
 # 6. 清除剛才建立的暫時防火牆規則
 Remove-NetFirewallRule -DisplayName "Temp_DHCP_Test" -ErrorAction SilentlyContinue | Out-Null
-Write-Host "掃描結束，共發現 $count 台 DHCP 伺服器。" -ForegroundColor Green` },
-            { title: "內建抓包 pktmon", code: `pktmon filter remove
-pktmon filter add -i 192.168.0.200 add -p 67 68
-pktmon start --etw -m real-time
-
-ipconfig /release
-ipconfig /renew
-
-pktmon stop
-pktmon filter remove` },
-            { title: "pktmon 流量監控", code: `pktmon stop
-pktmon filter remove
-pktmon filter add -i 168.95.1.1 -p 53
-pktmon filter add -i 1.1.1.1 -p 443
-pktmon start --etw -m real-time | findstr "元件 77 ethertype"
-
-nslookup google.com 168.95.1.1
-curl -I https://www.google.com --connect-timeout 3
-
-pktmon stop
-pktmon filter remove` }
+Write-Host "掃描結束，共發現 $count 台 DHCP 伺服器。" -ForegroundColor Green` }
         ];
 
         if (window.parent && window.parent !== window) {
