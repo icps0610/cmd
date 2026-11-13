@@ -90,17 +90,20 @@ nslookup google.com 8.8.8.8` },
             { title: "連線IP PORT測試", code: `powershell "Test-NetConnection 142.251.43.14 -Port 443"` },
             { title: "內建抓包 pktmon", code: `pktmon stop
 pktmon filter remove
-:: 顯示
-:: pktmon start --etw -m real-time 
 pktmon start --etw
 
 :: 要結束的話
 pktmon stop
 pktmon etl2pcap PktMon.etl -o PktMon.pcapng
 
-
 :: 其他視窗
-nslookup google.com 168.95.1.1` }
+nslookup google.com 168.95.1.1
+
+:: 過濾
+:: pktmon filter add -i 168.95.1.1 -p 53
+:: 要顯示的話 
+:: pktmon start --etw -m real-time 
+` }
         ];
 
         if (window.parent && window.parent !== window) {
