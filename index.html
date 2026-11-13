@@ -93,6 +93,7 @@ pktmon filter remove
 pktmon start --etw
 
 :: 要結束的話
+timeout /t 60
 pktmon stop
 pktmon etl2pcap PktMon.etl -o PktMon.pcapng
 
