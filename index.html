@@ -63,6 +63,7 @@ powershell "& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoi
             { title: "Sysprep", code: `C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown` },
             { title: "建立本機帳號", code: `[shift+F10] start ms-cxh:localonly 或者 oobe\\bypassnro` },
             { title: "系統稽核模式", code: `[Ctrl + Shift + F3]` },
+            { title: "備分使用者資料夾", code: `Get-ChildItem "C:\\Users" -Directory | Where-Object Name -notin @("Public", "Default") | ForEach-Object { $u = $_.Name; @("Desktop", "Documents", "Downloads", "Favorites") | ForEach-Object { $s = "C:\\Users\\$u\\$_"; if (Test-Path $s) { Write-Host "= 開始同步 $u\\$_"; robocopy $s "Z:\\BackupUsers\\$u\\$_" /MIR /XJ /R:1 /W:3 /NDL /NJH /NFL /NJS /MT:2 } } }` },
             { title: "新增帳號", code: `net user user passwd /add
 net localgroup administrators user /add` },
             { title: "PE下操作: 帳號", code: `reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SAM
