@@ -76,7 +76,7 @@ reg unload HKLM\\OFFLINE` },
             { title: "印表機PORT_UI", code: `printui /s /t1` },
             { title: "日期時間", code: `echo %date:~0,4%.%date:~5,2%.%date:~8,2%.%time:~0,2%.%time:~3,2%.%time:~6,2%` },
             { title: "區網ping", code: `for /l %i in (1,1,254) do ping -n 1 -w 1 1.2.3.%i` },
-            { title: "紀錄ping", code: `while ($true) { ping.exe -n 1 8.8.8.8 | Where-Object { $_ -match "TTL=|逾時|timed out|無法連線|unreachable" } | ForEach-Object { $line = "{0:yyyy-MM-dd HH:mm:ss} - {1}" -f (Get-Date), $_; Write-Host $line; Add-Content -Path "log.txt" -Value $line -Encoding utf8 }; Start-Sleep -Seconds 60 }` },
+            { title: "紀錄ping", code: `$ip = "8.8.8.8"; $logFile = "log_$($ip -replace '\\.', '_').txt"; while ($true) { ping.exe -n 1 $ip | Where-Object { $_ -match "TTL=|逾時|timed out|無法連線|unreachable" } | ForEach-Object { $line = "{0:yyyy-MM-dd HH:mm:ss} - {1}" -f (Get-Date), $_; Write-Host $line; Add-Content -Path $logFile -Value $line -Encoding utf8 }; Start-Sleep -Seconds 10 }` },
             { title: "重複IP", code: `wevtutil qe System /q:"*[System[Provider[@Name='Tcpip'] and (EventID=4198 or EventID=4199)]]" /f:text /c:5` },
             { title: "DHCP 派發紀錄(顯示等級2,3)", code: `wevtutil qe System /q:"*[System[Provider[@Name='Microsoft-Windows-DHCP-Client'] and (Level=2 or Level=3)]]" /f:text /rd:true /c:5` },
             { title: "磁區操作", code: `:: 解除隱藏
