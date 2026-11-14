@@ -104,7 +104,9 @@ nslookup google.com 168.95.1.1
 :: 過濾
 :: pktmon filter add -i 168.95.1.1 -p 53
 :: 要顯示的話 
-:: pktmon start --etw -m real-time ` }
+:: pktmon start --etw -m real-time ` },
+            { title: "切換安全模式", code: `bcdedit /set {current} safeboot minimal
+bcdedit /deletevalue {current} safeboot` }
         ];
 
         if (window.parent && window.parent !== window) {
