@@ -168,6 +168,10 @@ window.CMD_COMMANDS = [
     "code": "reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SYSTEM\nreg query \"HKLM\\OFFLINE\\ControlSet001\\Services\\Tcpip\\Parameters\\Interfaces\" /s \nreg unload HKLM\\OFFLINE"
   },
   {
+    "title": "USB 磁碟 退出",
+    "code": "(New-Object -ComObject Shell.Application).Namespace(17).ParseName('E:').InvokeVerb('Eject')"
+  },
+  {
     "title": "win相機",
     "code": "start microsoft.windows.camera:"
   }
