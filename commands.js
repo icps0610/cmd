@@ -1,17 +1,5 @@
 window.CMD_COMMANDS = [
   {
-    "title": "工具列/開啟電源/輸入法/地區設定",
-    "code": "ms-settings:taskbar\npause\nstart ms-settings:powersleep \npause\nstart ms-settings:typing \npause\nstart ms-settings:regionlanguage"
-  },
-  {
-    "title": "內建抓包 pktmon",
-    "code": "pktmon stop\npktmon filter remove\npktmon start --etw\n\n:: 錄60秒結束\nping -n 60 2140008964 > nul\npktmon stop\npktmon etl2pcap PktMon.etl -o PktMon.pcapng\n\n:: 過濾\n:: pktmon filter add -i 168.95.1.1 -p 53\n:: 要顯示的話 \n:: pktmon start --etw -m real-time "
-  },
-  {
-    "title": "切換安全模式",
-    "code": "bcdedit /set {current} safeboot minimal\nbcdedit /deletevalue {current} safeboot"
-  },
-  {
     "title": "日期時間",
     "code": "echo %date:~0,4%.%date:~5,2%.%date:~8,2%.%time:~0,2%.%time:~3,2%.%time:~6,2%"
   },
@@ -36,6 +24,10 @@ window.CMD_COMMANDS = [
     "code": "curl.exe -s -S -L -k -C - --retry 999 --retry-delay 10 --retry-all-errors -o \"ubuntu-26.04.1-netboot-amd64.tar.gz\" \"https://ubuntu.cs.nycu.edu.tw/ubuntu-release/resolute/ubuntu-26.04.1-netboot-amd64.tar.gz\""
   },
   {
+    "title": "抓包 pktmon",
+    "code": "pktmon stop\npktmon filter remove\npktmon start --etw\n\n:: 錄60秒結束\nping -n 60 2140008964 > nul\npktmon stop\npktmon etl2pcap PktMon.etl -o PktMon.pcapng\n\n:: 過濾\n:: pktmon filter add -i 168.95.1.1 -p 53\n:: 要顯示的話 \n:: pktmon start --etw -m real-time "
+  },
+  {
     "title": "更新延長 (36500天)",
     "code": "reg add \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\WindowsUpdate\\UX\\Settings\" /v FlightSettingsMaxPauseDays /t REG_DWORD /d 36500 /f"
   },
@@ -46,6 +38,14 @@ window.CMD_COMMANDS = [
   {
     "title": "系統稽核模式",
     "code": "[Ctrl + Shift + F3]"
+  },
+  {
+    "title": "系統封裝 Sysprep",
+    "code": "sysprep /generalize /oobe /shutdown /unattend:C:\\autounattend.xml"
+  },
+  {
+    "title": "系統切換安全模式",
+    "code": "bcdedit /set {current} safeboot minimal\nbcdedit /deletevalue {current} safeboot"
   },
   {
     "title": "建立本機帳號",
@@ -94,6 +94,10 @@ window.CMD_COMMANDS = [
   {
     "title": "移除微軟Acer程式",
     "code": "Get-AppxPackage *OfficeHub* | Remove-AppxPackage;$apps=@(\"Microsoft OneNote - zh-tw\",\"Microsoft OneDrive\",\"Microsoft Teams\",\"Copilot\",\"Dropbox 優惠方案\",\"Microsoft 新聞\",\"Microsoft 365 - zh-tw\",\"Acer Product Registration\",\"Acer Configuration Manager\",\"ControlCenter Service\");$installed=winget list --accept-source-agreements | Out-String;foreach($app in $apps){if($installed -match [regex]::Escape($app)){Write-Host \"移除：$app\";winget uninstall --name $app --exact --silent --disable-interactivity}else{Write-Host \"不存在：$app\"}}"
+  },
+  {
+    "title": "設定 工具列/開啟電源/輸入法/地區",
+    "code": "start ms-settings:taskbar\nstart ms-settings:powersleep\nstart ms-settings:typing \nstart ms-settings:regionlanguage"
   },
   {
     "title": "連線IP PORT測試",
@@ -162,10 +166,6 @@ window.CMD_COMMANDS = [
   {
     "title": "PE下操作: 查詢IP",
     "code": "reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SYSTEM\nreg query \"HKLM\\OFFLINE\\ControlSet001\\Services\\Tcpip\\Parameters\\Interfaces\" /s \nreg unload HKLM\\OFFLINE"
-  },
-  {
-    "title": "Sysprep",
-    "code": "C:\\Windows\\System32\\Sysprep\\sysprep.exe /generalize /oobe /shutdown"
   },
   {
     "title": "win相機",
