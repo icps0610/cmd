@@ -128,10 +128,6 @@ window.CMD_COMMANDS = [
     "code": "sc stop wuauserv & sc config wuauserv start= disabled & sc stop bits & sc config bits start= disabled & sc stop dosvc & sc config dosvc start= disabled"
   },
   {
-    "title": "移除 Acer 程式",
-    "code": "winget uninstall --name \"Acer Product Registration\" \nwinget uninstall --name \"Acer Configuration Manager\" \nwinget uninstall --name \"ControlCenter Service\""
-  },
-  {
     "title": "PE下操作: 查詢IP",
     "code": "reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SYSTEM\nreg query \"HKLM\\OFFLINE\\ControlSet001\\Services\\Tcpip\\Parameters\\Interfaces\" /s \nreg unload HKLM\\OFFLINE"
   },
@@ -168,8 +164,8 @@ window.CMD_COMMANDS = [
     "code": "$ip = \"2140008964\"; $logFile = \"log_$($ip -replace '\\.', '_').txt\"; while ($true) { ping.exe -n 1 $ip | Where-Object { $_ -match \"TTL=|逾時|timed out|無法連線|unreachable\" } | ForEach-Object { $line = \"{0:yyyy-MM-dd HH:mm:ss} - {1}\" -f (Get-Date), $_; Write-Host $line; Add-Content -Path $logFile -Value $line -Encoding utf8 }; Start-Sleep -Seconds 10 }"
   },
   {
-    "title": "移除微軟程式 (OneNote/OneDrive/Teams/Copilot/Dropbox)",
-    "code": "$apps=@(\n    \"Microsoft OneNote - zh-tw\",\n    \"Microsoft OneDrive\",\n    \"Microsoft Teams\",\n    \"Copilot\",\n    \"Dropbox 優惠方案\",\n    \"Microsoft 新聞\",\n    \"Microsoft 365 - zh-tw\"\n);$installed=winget list --accept-source-agreements | Out-String;foreach($app in $apps){if($installed -match [regex]::Escape($app)){Write-Host \"移除：$app\";winget uninstall --name $app --exact --silent --disable-interactivity}else{Write-Host \"不存在：$app\"}}\nGet-AppxPackage *OfficeHub* | Remove-AppxPackage"
+    "title": "移除微軟Acer程式",
+    "code": "$apps=@(\n    \"Microsoft OneNote - zh-tw\",\n    \"Microsoft OneDrive\",\n    \"Microsoft Teams\",\n    \"Copilot\",\n    \"Dropbox 優惠方案\",\n    \"Microsoft 新聞\",\n    \"Microsoft 365 - zh-tw\",\n    \"Acer Product Registration\",\n    \"Acer Configuration Manager\",\n    \"ControlCenter Service\"\n);$installed=winget list --accept-source-agreements | Out-String;foreach($app in $apps){if($installed -match [regex]::Escape($app)){Write-Host \"移除：$app\";winget uninstall --name $app --exact --silent --disable-interactivity}else{Write-Host \"不存在：$app\"}}\n\nGet-AppxPackage *OfficeHub* | Remove-AppxPackage"
   },
   {
     "title": "新增印表機",
