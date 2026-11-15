@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 指令管理編輯器</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --card-bg: #252526;
+            --card-border: #333333;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #4caf50;
+            --accent-hover: #45a049;
+            --primary: #2196F3;
+            --primary-hover: #1976D2;
+            --danger: #f44336;
+            --danger-hover: #d32f2f;
+            --code-bg: #000000;
+            --border: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        /* 頂部標題與狀態 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            color: #fff;
+            text-align: center;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: #2a2a2a;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #888;
+        }
+        .status-dot.active { background: #4caf50; }
+        .status-dot.file-mode { background: #2196F3; }
+
+        /* 工具列 */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: var(--panel-bg);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            background: #141414;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 260px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-success { background: var(--accent); color: white; }
+        .btn-success:hover { background: var(--accent-hover); }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: var(--danger-hover); }
+
+        .btn-secondary { background: #333; color: #ddd; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; color: #fff; }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+        }
+
+        /* 提示通知條 */
+        .notice-banner {
+            background: #1a2733;
+            border: 1px solid #204b73;
+            color: #b8dcff;
+            padding: 10px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 指令卡片列表 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            .search-input {
+                width: 100%;
+            }
+        }
+
+        .item-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.15s, border-color 0.15s, opacity 0.15s, box-shadow 0.15s;
+            cursor: grab;
+        }
+
+        .item-card:active {
+            cursor: grabbing;
+        }
+
+        .item-card.dragging {
+            opacity: 0.35;
+            border: 2px dashed var(--primary);
+            transform: scale(0.98);
+        }
+
+        .item-card.drag-over {
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 14px rgba(76, 175, 80, 0.45);
+            transform: translateY(-3px);
+        }
+
+        .drag-handle {
+            display: inline-block;
+            cursor: grab;
+            color: #666;
+            margin-right: 6px;
+            font-size: 1.1rem;
+            user-select: none;
+            vertical-align: middle;
+        }
+
+        .drag-handle:hover {
+            color: var(--primary);
+        }
+
+        .card-actions, .code-block {
+            cursor: auto;
+        }
+
+        .item-card:hover {
+            border-color: #555;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .item-title {
+            font-size: 1rem;
+            color: var(--accent);
+            font-weight: 600;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .code-block {
+            background-color: var(--code-bg);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+            color: #dcdcdc;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0;
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid #222;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* 模態彈窗 (新增/編輯) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-dialog {
+            background: var(--panel-bg);
+            border: 1px solid #444;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: #fff;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .close-btn:hover { color: #fff; }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ddd;
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .form-input {
+            background: #141414;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+        }
+
+        .form-textarea {
+            background: #141414;
+            border: 1px solid #444;
+            color: #00ff66;
+            font-family: 'Consolas', monospace;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            min-height: 180px;
+            resize: vertical;
+            line-height: 1.5;
+            tab-size: 4;
+        }
+
+        .form-textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .alert-box {
+            background: #252317;
+            border: 1px solid #63501a;
+            color: #ecd58b;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+
+        /* 複製提示浮窗 */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+            z-index: 2000;
+            pointer-events: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success { background: #2e7d32; }
+        .toast.error { background: #c62828; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 頂部標題列 -->
+        <header class="header">
+            <div class="header-title">
+                <h1>Windows 指令編輯管理員</h1>
+            </div>
+            <div class="toolbar-group">
+                <button class="btn btn-success" id="btnSaveAll" onclick="saveAllChanges()">
+                    💾 儲存 commands.js
+                </button>
+            </div>
+        </header>
+
+        <!-- 常用工具列 -->
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="btn btn-primary" onclick="openEditModal(-1)">
+                    ➕ 新增指令
+                </button>
+                <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋標題或指令內容..." oninput="filterCommands()">
+                <span id="commandBadge" style="font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap;"></span>
+            </div>
+            <div class="toolbar-group">
+                <button class="btn btn-secondary" onclick="sortCommandsByLength()" title="依指令內容長度由少到多排序">
+                    ↕ 內容長度排序
+                </button>
+            </div>
+        </div>
+
+        <!-- 指令卡片列表 -->
+        <div class="grid-container" id="cardsContainer"></div>
+    </div>
+
+    <!-- 編輯/新增 Modal 視窗 -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h2 id="modalTitle">新增指令</h2>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">指令標題 (Title)</label>
+                <input type="text" id="inputTitle" class="form-input" placeholder="指令標題">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">指令內容 (Code)</label>
+                <div class="form-hint">直接在此貼上原始代碼</div>
+                <textarea id="inputCode" class="form-textarea" placeholder="在此貼上指令內容..." spellcheck="false"></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitEditForm()">確認儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示通知浮窗 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="commands.js"></script>
+    <script>
+        // ===== 儲存目標路徑：要更改儲存位置時，修改下一行 =====
+        const TARGET_PATH = "E:/script/github/cmd/commands.js";
+        // ======================================================
+        // 全域變數
+        let commands = Array.isArray(window.CMD_COMMANDS) ? window.CMD_COMMANDS.map(item => ({ ...item })) : [];
+        let currentEditIndex = -1;
+        let fileHandle = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            renderCommands();
+            await loadCommandsFile();
+            await restoreSavedFileHandle();
+        });
+
+        async function restoreSavedFileHandle() {
+            try {
+                const saved = await getHandleFromDB('commandsFileHandle');
+                if (saved && saved.name === 'commands.js') {
+                    fileHandle = saved;
+                }
+            } catch (error) {
+                console.warn('無法還原已記住的檔案位置：', error);
+            }
+        }
+
+        async function loadCommandsFile() {
+            if (!commands.length) {
+                showToast('commands.js 未載入；請勿儲存空清單。', 'error');
+                document.getElementById('btnSaveAll').disabled = true;
+                return;
+            }
+        }
+        let draggedIndex = null;
+
+        // 渲染指令卡片 (支援滑鼠拖拉排序)
+        function renderCommands(filterKeyword = "") {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = "";
+
+            const kw = filterKeyword.trim().toLowerCase();
+            let visibleCount = 0;
+
+            commands.forEach((cmd, index) => {
+                const title = cmd.title || "";
+                const code = cmd.code || "";
+
+                if (kw && !title.toLowerCase().includes(kw) && !code.toLowerCase().includes(kw)) {
+                    return;
+                }
+                visibleCount++;
+
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.draggable = true;
+                card.dataset.index = index;
+
+                // 拖曳事件處理
+                card.addEventListener('dragstart', (e) => {
+                    draggedIndex = index;
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', index);
+                    setTimeout(() => card.classList.add('dragging'), 0);
+                });
+
+                card.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (draggedIndex !== null && draggedIndex !== index) {
+                        card.classList.add('drag-over');
+                    }
+                });
+
+                card.addEventListener('dragleave', () => {
+                    card.classList.remove('drag-over');
+                });
+
+                card.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    card.classList.remove('drag-over');
+                    if (draggedIndex !== null && draggedIndex !== index) {
+                        const moved = commands.splice(draggedIndex, 1)[0];
+                        commands.splice(index, 0, moved);
+                        renderCommands(document.getElementById('searchInput').value);
+                        await saveAllChanges();
+                    }
+                });
+
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                    document.querySelectorAll('.item-card').forEach(c => c.classList.remove('drag-over'));
+                    draggedIndex = null;
+                });
+
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'card-header';
+
+                const titleEl = document.createElement('div');
+                titleEl.className = 'item-title';
+
+                const handleSpan = document.createElement('span');
+                handleSpan.className = 'drag-handle';
+                handleSpan.title = '按住可拖曳卡片調整順序';
+                handleSpan.innerText = '⠿';
+
+                const textSpan = document.createElement('span');
+                textSpan.innerText = title;
+
+                titleEl.appendChild(handleSpan);
+                titleEl.appendChild(textSpan);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'card-actions';
+
+                // 上移按鈕
+                const upBtn = document.createElement('button');
+                upBtn.className = 'btn btn-secondary btn-sm';
+                upBtn.title = '上移';
+                upBtn.innerText = '↑';
+                upBtn.disabled = index === 0;
+                upBtn.onclick = () => moveCommand(index, -1);
+
+                // 下移按鈕
+                const downBtn = document.createElement('button');
+                downBtn.className = 'btn btn-secondary btn-sm';
+                downBtn.title = '下移';
+                downBtn.innerText = '↓';
+                downBtn.disabled = index === commands.length - 1;
+                downBtn.onclick = () => moveCommand(index, 1);
+
+                // 複製按鈕
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'btn btn-secondary btn-sm';
+                copyBtn.title = '複製代碼';
+                copyBtn.innerText = '複製';
+                copyBtn.onclick = () => copyCodeText(code, copyBtn);
+
+                // 編輯按鈕
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-primary btn-sm';
+                editBtn.title = '編輯內容';
+                editBtn.innerText = '編輯';
+                editBtn.onclick = () => openEditModal(index);
+
+                // 刪除按鈕
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn btn-danger btn-sm';
+                delBtn.title = '刪除此項目';
+                delBtn.innerText = '刪除';
+                delBtn.onclick = () => deleteCommand(index);
+
+                actionsDiv.appendChild(upBtn);
+                actionsDiv.appendChild(downBtn);
+                actionsDiv.appendChild(copyBtn);
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(delBtn);
+
+                headerDiv.appendChild(titleEl);
+                headerDiv.appendChild(actionsDiv);
+
+                const pre = document.createElement('pre');
+                pre.className = 'code-block';
+                pre.innerText = code;
+
+                card.appendChild(headerDiv);
+                card.appendChild(pre);
+                container.appendChild(card);
+            });
+
+            const countText = `共 ${commands.length} 個指令` + (kw ? ` (篩選出 ${visibleCount} 個)` : '');
+            if (document.getElementById('commandCountInfo')) document.getElementById('commandCountInfo').innerText = countText;
+            if (document.getElementById('commandBadge')) document.getElementById('commandBadge').innerText = countText;
+        }
+
+        // 移動指令順序
+        async function moveCommand(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= commands.length) return;
+            const temp = commands[index];
+            commands[index] = commands[newIndex];
+            commands[newIndex] = temp;
+            renderCommands(document.getElementById('searchInput').value);
+            await saveAllChanges();
+        }
+
+        // 刪除指令
+        async function deleteCommand(index) {
+            const item = commands[index];
+            if (confirm(`確定要刪除「${item.title}」嗎？`)) {
+                commands.splice(index, 1);
+                renderCommands(document.getElementById('searchInput').value);
+                await saveAllChanges();
+            }
+        }
+
+        // 搜尋過濾
+        function filterCommands() {
+            const kw = document.getElementById('searchInput').value;
+            renderCommands(kw);
+        }
+
+        // 開啟編輯 Modal
+        function openEditModal(index) {
+            currentEditIndex = index;
+            const modal = document.getElementById('editModal');
+            const titleInput = document.getElementById('inputTitle');
+            const codeInput = document.getElementById('inputCode');
+            const modalTitle = document.getElementById('modalTitle');
+
+            if (index >= 0) {
+                modalTitle.innerText = "編輯指令";
+                titleInput.value = commands[index].title || "";
+                codeInput.value = commands[index].code || "";
+            } else {
+                modalTitle.innerText = "新增指令";
+                titleInput.value = "";
+                codeInput.value = "";
+            }
+
+            modal.classList.add('open');
+            setTimeout(() => titleInput.focus(), 50);
+        }
+
+        // 輸入快捷鍵：Tab 縮排與 Ctrl + Enter 儲存
+        document.getElementById('inputCode').addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+            } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                submitEditForm();
+            }
+        });
+
+        // 關閉 Modal
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('open');
+            currentEditIndex = -1;
+        }
+
+        // 提交編輯表單並直接寫入 index.html
+        async function submitEditForm() {
+            const title = document.getElementById('inputTitle').value.trim();
+            const code = document.getElementById('inputCode').value;
+
+            if (!title) {
+                alert("請輸入指令標題！");
+                document.getElementById('inputTitle').focus();
+                return;
+            }
+
+            if (!code.trim()) {
+                alert("請輸入指令內容！");
+                document.getElementById('inputCode').focus();
+                return;
+            }
+
+            if (currentEditIndex >= 0) {
+                commands[currentEditIndex] = { title, code };
+            } else {
+                commands.push({ title, code });
+            }
+
+            closeEditModal();
+            renderCommands(document.getElementById('searchInput').value);
+            await saveAllChanges();
+        }
+
+        async function sortCommandsByLength() {
+            commands.sort((a, b) => (a.code || "").length - (b.code || "").length);
+            renderCommands(document.getElementById("searchInput").value);
+            await saveAllChanges();
+        }
+        async function saveAllChanges() {
+            if (!commands.length) {
+                showToast('指令清單為空，已取消儲存。', 'error');
+                return;
+            }
+            const source = 'window.CMD_COMMANDS = ' + JSON.stringify(commands, null, 2) + ';\n';
+            try {
+                if (fileHandle) {
+                    if (fileHandle.queryPermission && (await fileHandle.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+                        const permission = await fileHandle.requestPermission({ mode: 'readwrite' });
+                        if (permission !== 'granted') throw new Error('未取得寫入權限');
+                    }
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(source);
+                    await writable.close();
+                    showToast('已儲存 commands.js', 'success');
+                    return;
+                }
+                if ('showSaveFilePicker' in window) {
+                    const handle = await window.showSaveFilePicker({
+                        id: 'windows_cmd_commands', suggestedName: 'commands.js',
+                        types: [{ description: 'JavaScript 檔案', accept: { 'text/javascript': ['.js'] } }]
+                    });
+                    fileHandle = handle;
+                    await saveHandleToDB('commandsFileHandle', handle);
+                    const writable = await handle.createWritable();
+                    await writable.write(source);
+                    await writable.close();
+                    showToast('已儲存 commands.js', 'success');
+                    return;
+                }
+                const blob = new Blob([source], { type: 'text/javascript;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url; link.download = 'commands.js'; link.click();
+                setTimeout(() => URL.revokeObjectURL(url), 2000);
+                showToast('已下載 commands.js，請放回網站資料夾覆蓋原檔。', 'success');
+            } catch (error) {
+                if (error.name !== 'AbortError') showToast('儲存失敗：' + error.message, 'error');
+            }
+        }
+        // 浮窗訊息通知提示
+        function showToast(msg, type = "info") {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.innerText = msg;
+            toast.className = `toast show ${type}`;
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        // --- IndexedDB 記住 commands.js 檔案位置，避免每次儲存都重新選擇 ---
+        function getDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('CmdPathDB', 1);
+                req.onupgradeneeded = (e) => { e.target.result.createObjectStore('handles'); };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function saveHandleToDB(key, handle) {
+            try {
+                const db = await getDB();
+                const tx = db.transaction('handles', 'readwrite');
+                tx.objectStore('handles').put(handle, key);
+            } catch (e) {}
+        }
+
+        async function getHandleFromDB(key) {
+            try {
+                const db = await getDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction('handles', 'readonly');
+                    const req = tx.objectStore('handles').get(key);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => resolve(null);
+                });
+            } catch (e) { return null; }
+        }
+
+        function copyCodeText(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = "已複製!";
+                btn.style.backgroundColor = "var(--accent)";
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.backgroundColor = "";
+                }, 1200);
+            }).catch(() => {
+                showToast("複製失敗，請手動選取", "error");
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 指令工具</title>
+    <script src="commands.js"></script>
+</head>
+<body>
+    <header class="page-header">
+        <h1><a href="https://github.com/icps0610/cmd" style="color: inherit; text-decoration: none;">常用指令</a></h1>
+        <div class="header-controls">
+        <button class="download-btn" onclick="downloadBatch()">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+            下載 cmd.txt
+        </button>
+        </div>
+    </header>
+
+    <div class="grid-container" id="container"></div>
+
+    <script>
+        const commands = window.CMD_COMMANDS;
+
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'CMD_SYNC_FROM_INDEX', commands: commands }, '*');
+        }
+
+        const container = document.getElementById('container');
+        commands.forEach(cmd => {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = `
+                <div class="item-label">${cmd.title}</div>
+                <button class="copy-btn" onclick="copyText(this)">複製</button>
+                <pre class="code-block">${cmd.code}</pre>
+            `;
+            container.appendChild(card);
+        });
+
+        function copyText(btn) {
+            const code = btn.nextElementSibling.innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const original = btn.innerText;
+                btn.innerText = "OK";
+                btn.classList.add("copied");
+                setTimeout(() => {
+                    btn.innerText = original;
+                    btn.classList.remove("copied");
+                }, 1500);
+            });
+        }
+
+        function downloadBatch() {
+            let content = "@echo off\r\nchcp 65001 > nul\r\n\r\n";
+            commands.forEach(cmd => {
+                content += `:: ${cmd.title}\r\n${cmd.code}\r\n\r\n`;
+            });
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cmd.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+<style>
+    :root {
+        --bg-color: #121212;
+        --item-bg: #1e1e1e;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --accent: #4caf50;
+        --code-bg: #000000;
+        --border: #333;
+    }
+    body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .page-header {
+        width: 100%; max-width: 1200px; display: flex;
+        justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 15px; margin-bottom: 20px;
+    }
+    .page-header h1 { margin: 0 auto; text-align: center; }
+    .header-controls { display: flex; align-items: center; }
+    .download-btn {
+        background-color: #2196F3;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+    .download-btn:hover { background-color: #1976D2; }
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+        gap: 15px;
+        width: 100%;
+        max-width: 1600px;
+    }
+    @media (max-width: 768px) {
+        .grid-container { grid-template-columns: 1fr; }
+    }
+    .item-card {
+        background-color: var(--item-bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    .item-label {
+        font-size: 0.95rem;
+        color: var(--accent);
+        margin-bottom: 8px;
+        font-weight: 600;
+        padding-right: 60px;
+    }
+    .code-block {
+        background-color: var(--code-bg);
+        padding: 10px;
+        border-radius: 4px;
+        font-family: 'Consolas', monospace;
+        font-size: 0.85rem;
+        color: #dcdcdc;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        margin: 0;
+    }
+    .copy-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #333;
+        color: white;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 4px 12px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .copy-btn:hover { background-color: #555; }
+    .copy-btn.copied { background-color: var(--accent); border-color: var(--accent); }
+</style>
+</html>
+
+
