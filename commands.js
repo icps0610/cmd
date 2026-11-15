@@ -93,7 +93,7 @@ window.CMD_COMMANDS = [
   },
   {
     "title": "移除微軟Acer程式",
-    "code": "$apps=@(\n    \"Microsoft OneNote - zh-tw\",\n    \"Microsoft OneDrive\",\n    \"Microsoft Teams\",\n    \"Copilot\",\n    \"Dropbox 優惠方案\",\n    \"Microsoft 新聞\",\n    \"Microsoft 365 - zh-tw\",\n    \"Acer Product Registration\",\n    \"Acer Configuration Manager\",\n    \"ControlCenter Service\"\n);$installed=winget list --accept-source-agreements | Out-String;foreach($app in $apps){if($installed -match [regex]::Escape($app)){Write-Host \"移除：$app\";winget uninstall --name $app --exact --silent --disable-interactivity}else{Write-Host \"不存在：$app\"}}\n\nGet-AppxPackage *OfficeHub* | Remove-AppxPackage"
+    "code": "Get-AppxPackage *OfficeHub* | Remove-AppxPackage;$apps=@(\"Microsoft OneNote - zh-tw\",\"Microsoft OneDrive\",\"Microsoft Teams\",\"Copilot\",\"Dropbox 優惠方案\",\"Microsoft 新聞\",\"Microsoft 365 - zh-tw\",\"Acer Product Registration\",\"Acer Configuration Manager\",\"ControlCenter Service\");$installed=winget list --accept-source-agreements | Out-String;foreach($app in $apps){if($installed -match [regex]::Escape($app)){Write-Host \"移除：$app\";winget uninstall --name $app --exact --silent --disable-interactivity}else{Write-Host \"不存在：$app\"}}"
   },
   {
     "title": "連線IP PORT測試",
