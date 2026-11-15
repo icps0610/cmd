@@ -470,8 +470,8 @@
                 <span id="commandBadge" style="font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap;"></span>
             </div>
             <div class="toolbar-group">
-                <button class="btn btn-secondary" onclick="sortCommandsByLength()" title="依指令內容長度由少到多排序">
-                    ↕ 內容長度排序
+                <button class="btn btn-secondary" onclick="sortCommandsByTitleThenLength()" title="先依標題第一個字排序；相同時依內容長度由少到多排序">
+                    ↕ 標題排序
                 </button>
             </div>
         </div>
@@ -781,8 +781,13 @@
             await saveAllChanges();
         }
 
-        async function sortCommandsByLength() {
-            commands.sort((a, b) => (a.code || "").length - (b.code || "").length);
+        async function sortCommandsByTitleThenLength() {
+            commands.sort((a, b) => {
+                const firstA = Array.from(a.title || "")[0] || "";
+                const firstB = Array.from(b.title || "")[0] || "";
+                const titleOrder = firstA.localeCompare(firstB, "zh-Hant-TW", { sensitivity: "base" });
+                return titleOrder || (a.code || "").length - (b.code || "").length;
+            });
             renderCommands(document.getElementById("searchInput").value);
             await saveAllChanges();
         }
@@ -885,6 +890,7 @@
     </script>
 </body>
 </html>
+
 
 
 
