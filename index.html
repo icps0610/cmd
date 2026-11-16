@@ -28,16 +28,67 @@
         }
 
         const container = document.getElementById('container');
-        commands.forEach(cmd => {
-            const card = document.createElement('div');
-            card.className = 'item-card';
-            card.innerHTML = `
-                <div class="item-label">${cmd.title}</div>
-                <button class="copy-btn" onclick="copyText(this)">複製</button>
-                <pre class="code-block">${cmd.code}</pre>
-            `;
-            container.appendChild(card);
-        });
+        let activeTag = null;   // 目前用來排序的標籤；null 表示預設排序
+
+        // 預設排序：指令內容由短到長，長度相同時依標題
+        function byContent(a, b) {
+            return (a.code || '').length - (b.code || '').length
+                || (a.title || '').localeCompare(b.title || '', 'zh-Hant-TW');
+        }
+
+        // 標籤排序：含該標籤的指令排在最前面，其餘維持預設排序
+        function getSortedCommands() {
+            const list = [...commands].sort(byContent);
+            if (!activeTag) return list;
+            const hasTag = cmd => (cmd.tags || []).includes(activeTag);
+            return [...list.filter(hasTag), ...list.filter(cmd => !hasTag(cmd))];
+        }
+
+        function toggleTagSort(tag) {
+            activeTag = activeTag === tag ? null : tag;
+            renderCards();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderCards() {
+            container.innerHTML = '';
+            getSortedCommands().forEach(cmd => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+
+                const label = document.createElement('div');
+                label.className = 'item-label';
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = cmd.title || '';
+                label.appendChild(titleSpan);
+
+                (cmd.tags || []).forEach(tag => {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'tag-chip' + (tag === activeTag ? ' active' : '');
+                    chip.textContent = tag;
+                    chip.title = tag === activeTag ? '再點一下恢復預設排序' : `點一下以「${tag}」排序`;
+                    chip.onclick = () => toggleTagSort(tag);
+                    label.appendChild(chip);
+                });
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.textContent = '複製';
+                copyBtn.onclick = () => copyText(copyBtn);
+
+                const pre = document.createElement('pre');
+                pre.className = 'code-block';
+                pre.textContent = cmd.code || '';
+
+                card.appendChild(label);
+                card.appendChild(copyBtn);
+                card.appendChild(pre);
+                container.appendChild(card);
+            });
+        }
+
+        renderCards();
 
         function copyText(btn) {
             const code = btn.nextElementSibling.innerText;
@@ -135,6 +186,29 @@
         margin-bottom: 8px;
         font-weight: 600;
         padding-right: 60px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+    }
+    .tag-chip {
+        padding: 1px 9px;
+        border-radius: 0;
+        font-size: 0.72rem;
+        font-weight: 600;
+        line-height: 1.5;
+        white-space: nowrap;
+        cursor: pointer;
+        background: #3a3a3a;
+        color: #cfcfcf;
+        border: 1px solid #555;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .tag-chip:hover { background: #4a4a4a; }
+    .tag-chip.active {
+        background: #8b0000;
+        border-color: #b22222;
+        color: #fff;
     }
     .code-block {
         background-color: var(--code-bg);

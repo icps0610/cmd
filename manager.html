@@ -290,6 +290,61 @@
             color: var(--text-secondary);
         }
 
+        /* 分類標籤 */
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+            cursor: auto;
+        }
+
+        .tag-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 0;
+            font-size: 0.78rem;
+            font-weight: 600;
+            line-height: 1.5;
+            white-space: nowrap;
+            background: #3a3a3a;
+            color: #cfcfcf;
+            border: 1px solid #555;
+        }
+
+        .tag-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 30px;
+        }
+
+        .tag-picker .tag-chip {
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 4px 12px;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .tag-picker .tag-chip:hover { background: #4a4a4a; }
+
+        .tag-picker .tag-chip.selected {
+            background: #8b0000;
+            border-color: #b22222;
+            color: #fff;
+        }
+
+        .tag-picker .tag-chip.selected::before { content: "✓"; }
+
+        .tag-add-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tag-add-row .form-input { flex: 1; }
+
         /* 模態彈窗 (新增/編輯) */
         .modal-overlay {
             position: fixed;
@@ -467,7 +522,7 @@
                 <button class="btn btn-primary" onclick="openEditModal(-1)">
                     ➕ 新增指令
                 </button>
-                <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋標題或指令內容..." oninput="filterCommands()">
+                <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋標題、標籤或指令內容..." oninput="filterCommands()">
                 <span id="commandBadge" style="font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap;"></span>
             </div>
         </div>
@@ -487,6 +542,16 @@
             <div class="form-group">
                 <label class="form-label">指令標題 (Title)</label>
                 <input type="text" id="inputTitle" class="form-input" placeholder="指令標題">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">分類標籤 (Tags，可多選)</label>
+                <div class="form-hint">點選標籤即可選取或取消；也可以輸入新標籤</div>
+                <div class="tag-picker" id="tagPicker"></div>
+                <div class="tag-add-row">
+                    <input type="text" id="inputNewTag" class="form-input" placeholder="輸入新標籤後按 Enter">
+                    <button type="button" class="btn btn-secondary" onclick="addNewTag()">新增標籤</button>
+                </div>
             </div>
 
             <div class="form-group">
@@ -541,6 +606,59 @@
         }
         let draggedIndex = null;
 
+        // ===== 分類標籤 =====
+        let selectedTags = new Set();   // 編輯視窗中目前勾選的標籤
+        let pendingTags = [];           // 編輯視窗中新建、尚未存入任何指令的標籤
+
+        function createTagChip(tag, tagName = 'span') {
+            const chip = document.createElement(tagName);
+            chip.className = 'tag-chip';
+            chip.innerText = tag;
+            return chip;
+        }
+
+        // 取得所有已使用的標籤 (含編輯視窗中新建的)
+        function getAllTags() {
+            const set = new Set(pendingTags);
+            commands.forEach(cmd => (cmd.tags || []).forEach(t => set.add(t)));
+            selectedTags.forEach(t => set.add(t));
+            return Array.from(set).sort((a, b) => a.localeCompare(b, 'zh-Hant-TW'));
+        }
+
+        function renderTagPicker() {
+            const picker = document.getElementById('tagPicker');
+            picker.innerHTML = '';
+            getAllTags().forEach(tag => {
+                const chip = createTagChip(tag, 'button');
+                chip.type = 'button';
+                if (selectedTags.has(tag)) chip.classList.add('selected');
+                chip.onclick = () => {
+                    if (selectedTags.has(tag)) selectedTags.delete(tag);
+                    else selectedTags.add(tag);
+                    renderTagPicker();
+                };
+                picker.appendChild(chip);
+            });
+        }
+
+        function addNewTag() {
+            const input = document.getElementById('inputNewTag');
+            const tag = input.value.trim();
+            if (!tag) return;
+            if (!pendingTags.includes(tag)) pendingTags.push(tag);
+            selectedTags.add(tag);
+            input.value = '';
+            renderTagPicker();
+            input.focus();
+        }
+
+        document.getElementById('inputNewTag').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addNewTag();
+            }
+        });
+
         // 渲染指令卡片 (支援滑鼠拖拉排序)
         function renderCommands(filterKeyword = "") {
             const container = document.getElementById('cardsContainer');
@@ -552,8 +670,10 @@
             commands.forEach((cmd, index) => {
                 const title = cmd.title || "";
                 const code = cmd.code || "";
+                const tags = Array.isArray(cmd.tags) ? cmd.tags : [];
 
-                if (kw && !title.toLowerCase().includes(kw) && !code.toLowerCase().includes(kw)) {
+                if (kw && !title.toLowerCase().includes(kw) && !code.toLowerCase().includes(kw)
+                    && !tags.some(t => t.toLowerCase().includes(kw))) {
                     return;
                 }
                 visibleCount++;
@@ -671,6 +791,12 @@
                 pre.innerText = code;
 
                 card.appendChild(headerDiv);
+                if (tags.length) {
+                    const tagsDiv = document.createElement('div');
+                    tagsDiv.className = 'tag-list';
+                    tags.forEach(t => tagsDiv.appendChild(createTagChip(t)));
+                    card.appendChild(tagsDiv);
+                }
                 card.appendChild(pre);
                 container.appendChild(card);
             });
@@ -719,11 +845,16 @@
                 modalTitle.innerText = "編輯指令";
                 titleInput.value = commands[index].title || "";
                 codeInput.value = commands[index].code || "";
+                selectedTags = new Set(commands[index].tags || []);
             } else {
                 modalTitle.innerText = "新增指令";
                 titleInput.value = "";
                 codeInput.value = "";
+                selectedTags = new Set();
             }
+            pendingTags = [];
+            document.getElementById('inputNewTag').value = "";
+            renderTagPicker();
 
             modal.classList.add('open');
             setTimeout(() => titleInput.focus(), 50);
@@ -766,10 +897,14 @@
                 return;
             }
 
+            // 輸入框內尚未按 Enter 的新標籤也一併納入
+            addNewTag();
+            const tags = getAllTags().filter(t => selectedTags.has(t));
+
             if (currentEditIndex >= 0) {
-                commands[currentEditIndex] = { title, code };
+                commands[currentEditIndex] = { title, code, tags };
             } else {
-                commands.push({ title, code });
+                commands.push({ title, code, tags });
             }
 
             closeEditModal();
