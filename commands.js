@@ -122,18 +122,18 @@ window.CMD_COMMANDS = [
     ]
   },
   {
-    "title": "權限使用者設定",
-    "code": "takeown /f \"D:\\Users\\test\" /r /d y\nicacls \"D:\\Users\\test\" /grant \"%USERNAME%\":(OI)(CI)F\n",
-    "tags": [
-      "權限",
-      "檔案"
-    ]
-  },
-  {
     "title": "USB 磁碟 退出",
     "code": "(New-Object -ComObject Shell.Application).Namespace(17).ParseName('E:').InvokeVerb('Eject')",
     "tags": [
       "磁碟"
+    ]
+  },
+  {
+    "title": "權限使用者設定",
+    "code": "takeown /f \"D:\\Users\\test\" /r /d y\nicacls \"D:\\Users\\test\" /grant \"%USERNAME%:(OI)(CI)F\" /t /c\n",
+    "tags": [
+      "檔案",
+      "權限"
     ]
   },
   {
