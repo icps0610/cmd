@@ -315,6 +315,13 @@ window.CMD_COMMANDS = [
     ]
   },
   {
+    "title": "自動網路重連",
+    "code": "echo netsh interface set interface name=\"乙太網路\" admin=disabled > \"%USERPROFILE%\\resetnet.bat\" & echo timeout /t 5 /nobreak ^>nul >> \"%USERPROFILE%\\resetnet.bat\" & echo netsh interface set interface name=\"乙太網路\" admin=enabled >> \"%USERPROFILE%\\resetnet.bat\"\n\nschtasks /create /tn \"網路重連\" /tr \"%USERPROFILE%\\resetnet.bat\" /sc daily /st 08:01 /ri 360 /du 24:00 /ru SYSTEM /rl highest",
+    "tags": [
+      "網路"
+    ]
+  },
+  {
     "title": "移除微軟Acer程式",
     "code": "Get-AppxPackage *OfficeHub* | Remove-AppxPackage;$apps=@(\"Microsoft OneNote - zh-tw\",\"Microsoft OneDrive\",\"Microsoft Teams\",\"Copilot\",\"Dropbox 優惠方案\",\"Microsoft 新聞\",\"Microsoft 365 - zh-tw\",\"Acer Product Registration\",\"Acer Configuration Manager\",\"ControlCenter Service\");$installed=winget list --accept-source-agreements | Out-String;foreach($app in $apps){if($installed -match [regex]::Escape($app)){Write-Host \"移除：$app\";winget uninstall --name $app --exact --silent --disable-interactivity}else{Write-Host \"不存在：$app\"}}",
     "tags": [
