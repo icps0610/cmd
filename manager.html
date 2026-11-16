@@ -202,41 +202,6 @@
             flex-direction: column;
             position: relative;
             transition: transform 0.15s, border-color 0.15s, opacity 0.15s, box-shadow 0.15s;
-            cursor: grab;
-        }
-
-        .item-card:active {
-            cursor: grabbing;
-        }
-
-        .item-card.dragging {
-            opacity: 0.35;
-            border: 2px dashed var(--primary);
-            transform: scale(0.98);
-        }
-
-        .item-card.drag-over {
-            border: 2px solid var(--accent);
-            box-shadow: 0 0 14px rgba(76, 175, 80, 0.45);
-            transform: translateY(-3px);
-        }
-
-        .drag-handle {
-            display: inline-block;
-            cursor: grab;
-            color: #666;
-            margin-right: 6px;
-            font-size: 1.1rem;
-            user-select: none;
-            vertical-align: middle;
-        }
-
-        .drag-handle:hover {
-            color: var(--primary);
-        }
-
-        .card-actions, .code-block {
-            cursor: auto;
         }
 
         .item-card:hover {
@@ -303,16 +268,26 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            padding: 2px 10px;
-            border-radius: 0;
+            padding: 1px 8px;
+            font-family: inherit;
             font-size: 0.78rem;
             font-weight: 600;
             line-height: 1.5;
             white-space: nowrap;
-            background: #3a3a3a;
-            color: #cfcfcf;
-            border: 1px solid #555;
+            background: none;
+            color: #9a9a9a;
+            border: 1px solid #666;
         }
+
+        /* 卡片上的標籤：點一下以該標籤排序 */
+        .tag-list .tag-chip {
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .tag-list .tag-chip:hover { color: #d0d0d0; }
+
+        .tag-list .tag-chip.active { color: #ff8a80; }
 
         .tag-picker {
             display: flex;
@@ -323,18 +298,13 @@
 
         .tag-picker .tag-chip {
             cursor: pointer;
-            font-size: 0.85rem;
-            padding: 4px 12px;
-            transition: background 0.15s, border-color 0.15s;
+            font-size: 0.9rem;
+            transition: color 0.15s;
         }
 
-        .tag-picker .tag-chip:hover { background: #4a4a4a; }
+        .tag-picker .tag-chip:hover { color: #d0d0d0; }
 
-        .tag-picker .tag-chip.selected {
-            background: #8b0000;
-            border-color: #b22222;
-            color: #fff;
-        }
+        .tag-picker .tag-chip.selected { color: #ff8a80; }
 
         .tag-picker .tag-chip.selected::before { content: "✓"; }
 
@@ -580,7 +550,14 @@
         let currentEditIndex = -1;
         let fileHandle = null;
 
+        // 排序規則與 index.html 相同：指令內容由短到長，長度相同時依標題
+        function byContent(a, b) {
+            return (a.code || '').length - (b.code || '').length
+                || (a.title || '').localeCompare(b.title || '', 'zh-Hant-TW');
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
+            commands.sort(byContent);
             renderCommands();
             await loadCommandsFile();
             await restoreSavedFileHandle();
@@ -604,7 +581,7 @@
                 return;
             }
         }
-        let draggedIndex = null;
+        let activeTag = null;   // 目前用來排序的標籤；null 表示預設排序
 
         // ===== 分類標籤 =====
         let selectedTags = new Set();   // 編輯視窗中目前勾選的標籤
@@ -659,7 +636,14 @@
             }
         });
 
-        // 渲染指令卡片 (支援滑鼠拖拉排序)
+        // 點卡片上的標籤切換排序；再點一次恢復預設排序
+        function toggleTagSort(tag) {
+            activeTag = activeTag === tag ? null : tag;
+            renderCommands(document.getElementById('searchInput').value);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 渲染指令卡片
         function renderCommands(filterKeyword = "") {
             const container = document.getElementById('cardsContainer');
             container.innerHTML = "";
@@ -667,7 +651,16 @@
             const kw = filterKeyword.trim().toLowerCase();
             let visibleCount = 0;
 
-            commands.forEach((cmd, index) => {
+            // 排序與 index.html 相同：先依內容由短到長，點選標籤時含該標籤的指令排在最前面
+            // (保留原始索引供編輯／刪除使用)
+            let view = commands.map((cmd, index) => ({ cmd, index }))
+                .sort((a, b) => byContent(a.cmd, b.cmd));
+            if (activeTag) {
+                const hasTag = v => (v.cmd.tags || []).includes(activeTag);
+                view = [...view.filter(hasTag), ...view.filter(v => !hasTag(v))];
+            }
+
+            view.forEach(({ cmd, index }) => {
                 const title = cmd.title || "";
                 const code = cmd.code || "";
                 const tags = Array.isArray(cmd.tags) ? cmd.tags : [];
@@ -680,88 +673,16 @@
 
                 const card = document.createElement('div');
                 card.className = 'item-card';
-                card.draggable = true;
-                card.dataset.index = index;
-
-                // 拖曳事件處理
-                card.addEventListener('dragstart', (e) => {
-                    draggedIndex = index;
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/plain', index);
-                    setTimeout(() => card.classList.add('dragging'), 0);
-                });
-
-                card.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                    if (draggedIndex !== null && draggedIndex !== index) {
-                        card.classList.add('drag-over');
-                    }
-                });
-
-                card.addEventListener('dragleave', () => {
-                    card.classList.remove('drag-over');
-                });
-
-                card.addEventListener('drop', async (e) => {
-                    e.preventDefault();
-                    card.classList.remove('drag-over');
-                    if (draggedIndex !== null && draggedIndex !== index) {
-                        const moved = commands.splice(draggedIndex, 1)[0];
-                        commands.splice(index, 0, moved);
-                        renderCommands(document.getElementById('searchInput').value);
-                        await saveAllChanges();
-                    }
-                });
-
-                card.addEventListener('dragend', () => {
-                    card.classList.remove('dragging');
-                    document.querySelectorAll('.item-card').forEach(c => c.classList.remove('drag-over'));
-                    draggedIndex = null;
-                });
 
                 const headerDiv = document.createElement('div');
                 headerDiv.className = 'card-header';
 
                 const titleEl = document.createElement('div');
                 titleEl.className = 'item-title';
-
-                const handleSpan = document.createElement('span');
-                handleSpan.className = 'drag-handle';
-                handleSpan.title = '按住可拖曳卡片調整順序';
-                handleSpan.innerText = '⠿';
-
-                const textSpan = document.createElement('span');
-                textSpan.innerText = title;
-
-                titleEl.appendChild(handleSpan);
-                titleEl.appendChild(textSpan);
+                titleEl.innerText = title;
 
                 const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'card-actions';
-
-                // 上移按鈕
-                const upBtn = document.createElement('button');
-                upBtn.className = 'btn btn-secondary btn-sm';
-                upBtn.title = '上移';
-                upBtn.innerText = '↑';
-                upBtn.disabled = index === 0;
-                upBtn.onclick = () => moveCommand(index, -1);
-
-                // 下移按鈕
-                const downBtn = document.createElement('button');
-                downBtn.className = 'btn btn-secondary btn-sm';
-                downBtn.title = '下移';
-                downBtn.innerText = '↓';
-                downBtn.disabled = index === commands.length - 1;
-                downBtn.onclick = () => moveCommand(index, 1);
-
-                // 複製按鈕
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'btn btn-secondary btn-sm';
-                copyBtn.title = '複製代碼';
-                copyBtn.innerText = '複製';
-                copyBtn.onclick = () => copyCodeText(code, copyBtn);
 
                 // 編輯按鈕
                 const editBtn = document.createElement('button');
@@ -777,9 +698,6 @@
                 delBtn.innerText = '刪除';
                 delBtn.onclick = () => deleteCommand(index);
 
-                actionsDiv.appendChild(upBtn);
-                actionsDiv.appendChild(downBtn);
-                actionsDiv.appendChild(copyBtn);
                 actionsDiv.appendChild(editBtn);
                 actionsDiv.appendChild(delBtn);
 
@@ -794,7 +712,14 @@
                 if (tags.length) {
                     const tagsDiv = document.createElement('div');
                     tagsDiv.className = 'tag-list';
-                    tags.forEach(t => tagsDiv.appendChild(createTagChip(t)));
+                    tags.forEach(t => {
+                        const chip = createTagChip(t, 'button');
+                        chip.type = 'button';
+                        if (t === activeTag) chip.classList.add('active');
+                        chip.title = t === activeTag ? '再點一下恢復預設排序' : `點一下以「${t}」排序`;
+                        chip.onclick = () => toggleTagSort(t);
+                        tagsDiv.appendChild(chip);
+                    });
                     card.appendChild(tagsDiv);
                 }
                 card.appendChild(pre);
@@ -804,17 +729,6 @@
             const countText = `共 ${commands.length} 個指令` + (kw ? ` (篩選出 ${visibleCount} 個)` : '');
             if (document.getElementById('commandCountInfo')) document.getElementById('commandCountInfo').innerText = countText;
             if (document.getElementById('commandBadge')) document.getElementById('commandBadge').innerText = countText;
-        }
-
-        // 移動指令順序
-        async function moveCommand(index, direction) {
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= commands.length) return;
-            const temp = commands[index];
-            commands[index] = commands[newIndex];
-            commands[newIndex] = temp;
-            renderCommands(document.getElementById('searchInput').value);
-            await saveAllChanges();
         }
 
         // 刪除指令
@@ -913,12 +827,7 @@
         }
 
         async function saveAllChanges() {
-            commands.sort((a, b) => {
-                const firstA = Array.from(a.title || "")[0] || "";
-                const firstB = Array.from(b.title || "")[0] || "";
-                const titleOrder = firstA.localeCompare(firstB, "zh-Hant-TW", { sensitivity: "base" });
-                return titleOrder || (a.code || "").length - (b.code || "").length;
-            });
+            commands.sort(byContent);
             renderCommands(document.getElementById("searchInput").value);
             if (!commands.length) {
                 showToast('指令清單為空，已取消儲存。', 'error');
@@ -1000,20 +909,6 @@
                     req.onerror = () => resolve(null);
                 });
             } catch (e) { return null; }
-        }
-
-        function copyCodeText(text, btn) {
-            navigator.clipboard.writeText(text).then(() => {
-                const originalText = btn.innerText;
-                btn.innerText = "已複製!";
-                btn.style.backgroundColor = "var(--accent)";
-                setTimeout(() => {
-                    btn.innerText = originalText;
-                    btn.style.backgroundColor = "";
-                }, 1200);
-            }).catch(() => {
-                showToast("複製失敗，請手動選取", "error");
-            });
         }
     </script>
 </body>

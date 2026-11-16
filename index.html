@@ -62,6 +62,8 @@
                 titleSpan.textContent = cmd.title || '';
                 label.appendChild(titleSpan);
 
+                const tagList = document.createElement('div');
+                tagList.className = 'tag-list';
                 (cmd.tags || []).forEach(tag => {
                     const chip = document.createElement('button');
                     chip.type = 'button';
@@ -69,20 +71,18 @@
                     chip.textContent = tag;
                     chip.title = tag === activeTag ? '再點一下恢復預設排序' : `點一下以「${tag}」排序`;
                     chip.onclick = () => toggleTagSort(tag);
-                    label.appendChild(chip);
+                    tagList.appendChild(chip);
                 });
+                if (tagList.childElementCount) label.appendChild(tagList);
 
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'copy-btn';
-                copyBtn.textContent = '複製';
-                copyBtn.onclick = () => copyText(copyBtn);
-
+                // 點一下指令區塊即可複製
                 const pre = document.createElement('pre');
                 pre.className = 'code-block';
                 pre.textContent = cmd.code || '';
+                pre.title = '點一下複製';
+                pre.onclick = () => copyCode(pre, cmd.code || '');
 
                 card.appendChild(label);
-                card.appendChild(copyBtn);
                 card.appendChild(pre);
                 container.appendChild(card);
             });
@@ -90,16 +90,16 @@
 
         renderCards();
 
-        function copyText(btn) {
-            const code = btn.nextElementSibling.innerText;
+        function copyCode(pre, code) {
+            // 使用者正在反白選取文字時不觸發複製
+            if (String(window.getSelection())) return;
             navigator.clipboard.writeText(code).then(() => {
-                const original = btn.innerText;
-                btn.innerText = "OK";
-                btn.classList.add("copied");
-                setTimeout(() => {
-                    btn.innerText = original;
-                    btn.classList.remove("copied");
-                }, 1500);
+                pre.classList.add('copied');
+                clearTimeout(pre._copiedTimer);
+                pre._copiedTimer = setTimeout(() => pre.classList.remove('copied'), 1200);
+            }).catch(err => {
+                console.error('複製失敗：', err);
+                alert('複製失敗，請手動選取文字複製。');
             });
         }
 
@@ -185,31 +185,34 @@
         color: var(--accent);
         margin-bottom: 8px;
         font-weight: 600;
-        padding-right: 60px;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
+        gap: 4px 16px;
+    }
+    /* 標籤靠卡片最右側 */
+    .tag-list {
+        margin-left: auto;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
         gap: 6px;
     }
     .tag-chip {
-        padding: 1px 9px;
-        border-radius: 0;
-        font-size: 0.72rem;
+        padding: 1px 8px;
+        font-family: inherit;
+        font-size: 0.75rem;
         font-weight: 600;
         line-height: 1.5;
         white-space: nowrap;
         cursor: pointer;
-        background: #3a3a3a;
-        color: #cfcfcf;
-        border: 1px solid #555;
-        transition: background 0.15s, border-color 0.15s;
+        background: none;
+        color: #9a9a9a;
+        border: 1px solid #666;
+        transition: color 0.15s;
     }
-    .tag-chip:hover { background: #4a4a4a; }
-    .tag-chip.active {
-        background: #8b0000;
-        border-color: #b22222;
-        color: #fff;
-    }
+    .tag-chip:hover { color: #d0d0d0; }
+    .tag-chip.active { color: #ff8a80; }
     .code-block {
         background-color: var(--code-bg);
         padding: 10px;
@@ -221,22 +224,25 @@
         white-space: pre-wrap;
         word-break: break-all;
         margin: 0;
-    }
-    .copy-btn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background-color: #333;
-        color: white;
-        border: 1px solid #555;
-        border-radius: 4px;
-        padding: 4px 12px;
-        font-size: 0.8rem;
+        position: relative;
         cursor: pointer;
-        transition: all 0.2s;
+        border: 1px solid transparent;
+        transition: border-color 0.2s;
     }
-    .copy-btn:hover { background-color: #555; }
-    .copy-btn.copied { background-color: var(--accent); border-color: var(--accent); }
+    .code-block:hover { border-color: #555; }
+    .code-block.copied { border-color: var(--accent); }
+    .code-block.copied::after {
+        content: "已複製";
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        background-color: var(--accent);
+        color: #fff;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
 </style>
 </html>
 
