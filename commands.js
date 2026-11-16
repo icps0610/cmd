@@ -7,13 +7,6 @@ window.CMD_COMMANDS = [
     ]
   },
   {
-    "title": "系統稽核模式",
-    "code": "[Ctrl + Shift + F3]",
-    "tags": [
-      "部署"
-    ]
-  },
-  {
     "title": "win相機",
     "code": "start microsoft.windows.camera:",
     "tags": [
