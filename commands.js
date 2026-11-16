@@ -316,7 +316,7 @@ window.CMD_COMMANDS = [
   },
   {
     "title": "自動網路重連",
-    "code": "echo netsh interface set interface name=\"乙太網路\" admin=disabled > \"%USERPROFILE%\\resetnet.bat\" & echo timeout /t 5 /nobreak ^>nul >> \"%USERPROFILE%\\resetnet.bat\" & echo netsh interface set interface name=\"乙太網路\" admin=enabled >> \"%USERPROFILE%\\resetnet.bat\"\n\nschtasks /create /tn \"網路重連\" /tr \"%USERPROFILE%\\resetnet.bat\" /sc daily /st 08:01 /ri 360 /du 24:00 /ru SYSTEM /rl highest",
+    "code": "echo netsh interface set interface name=\"乙太網路\" admin=disabled > \"%USERPROFILE%\\resetnet.bat\" & echo timeout /t 10 /nobreak ^>nul >> \"%USERPROFILE%\\resetnet.bat\" & echo netsh interface set interface name=\"乙太網路\" admin=enabled >> \"%USERPROFILE%\\resetnet.bat\"\n\nschtasks /create /tn \"網路重連\" /tr \"%USERPROFILE%\\resetnet.bat\" /sc daily /st 08:01 /ri 360 /du 24:00 /ru SYSTEM /rl highest",
     "tags": [
       "網路"
     ]
