@@ -316,7 +316,7 @@ window.CMD_COMMANDS = [
   },
   {
     "title": "紀錄ping",
-    "code": "$ip = \"2140008964\"; $logFile = \"log_$($ip -replace '\\.', '_').txt\"; while ($true) { ping.exe -n 1 $ip | Where-Object { $_ -match \"TTL=|逾時|timed out|無法連線|unreachable\" } | ForEach-Object { $line = \"{0:yyyy-MM-dd HH:mm:ss} - {1}\" -f (Get-Date), $_; Write-Host $line; Add-Content -Path $logFile -Value $line -Encoding utf8 }; Start-Sleep -Seconds 10 }",
+    "code": "$ip = \"2140008964\"; $logFile = \"log_$($ip -replace '\\.', '_').txt\"; while ($true) { ping.exe -n 1 $ip | Where-Object { $_ -match \"TTL=|逾時|timed out|無法連線|unreachable\" } | ForEach-Object { $line = \"{0:yyyy-MM-dd HH:mm:ss} {1}\" -f (Get-Date), $_; Write-Host $line; Add-Content -Path $logFile -Value $line -Encoding utf8 }; Start-Sleep -Seconds 10 }",
     "tags": [
       "網路"
     ]
