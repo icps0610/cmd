@@ -21,10 +21,6 @@
 - **排序與瀏覽頁一致**：預設依指令內容由短到長排列，點卡片上的標籤可切換為標籤排序；儲存時 `commands.js` 也依內容長度寫入。
 - **直接寫回 `commands.js`**：透過瀏覽器的 File System Access API 儲存，第一次選擇檔案後會記住位置；不支援的瀏覽器則改為下載檔案。
 
-### 單一檔案版本 `ghcmd.bat`
-
-將 `commands.js` 與 `index.html` 合併成一個可獨立開啟的 `cmd.html`，適合放進 WinPE 或隨身碟離線使用。
-
 ## 檔案說明
 
 | 檔案 | 說明 |
@@ -32,7 +28,6 @@
 | `index.html` | 指令瀏覽頁 |
 | `manager.html` | 指令管理頁 |
 | `commands.js` | 指令資料 |
-| `ghcmd.bat` | 產生單一檔案版 `cmd.html` |
 
 ## 資料格式
 
