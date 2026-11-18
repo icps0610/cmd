@@ -242,11 +242,11 @@ window.CMD_COMMANDS = [
   },
   {
     "title": "PE下操作: 查詢IP",
-    "code": "reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SYSTEM\nreg query \"HKLM\\OFFLINE\\ControlSet001\\Services\\Tcpip\\Parameters\\Interfaces\" /s \nreg unload HKLM\\OFFLINE",
+    "code": "reg load HKLM\\OFFLINE C:\\Windows\\System32\\Config\\SYSTEM\nreg query \"HKLM\\OFFLINE\\ControlSet001\\Services\\Tcpip\\Parameters\\Interfaces\" /s /v \"IPAddress\"\nreg unload HKLM\\OFFLINE",
     "tags": [
-      "PE",
+      "登錄檔",
       "網路",
-      "登錄檔"
+      "PE"
     ]
   },
   {
