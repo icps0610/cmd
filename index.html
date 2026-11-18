@@ -30,7 +30,7 @@
         const container = document.getElementById('container');
         let activeTag = null;   // 目前用來排序的標籤；null 表示預設排序
 
-        // 預設排序：指令內容由短到長，長度相同時依標題
+        // 次要排序：指令內容由短到長，長度相同時依標題（主要排序為卡片高度，見 sortCardsByHeight）
         function byContent(a, b) {
             return (a.code || '').length - (b.code || '').length
                 || (a.title || '').localeCompare(b.title || '', 'zh-Hant-TW');
@@ -44,6 +44,26 @@
             return [...list.filter(hasTag), ...list.filter(cmd => !hasTag(cmd))];
         }
 
+        // 依卡片實際顯示高度排序：pinned（含目前標籤）排最前面，同組內由矮到高，
+        // 高度相同時沿用 byContent（內容長度 → 標題）
+        function sortCardsByHeight(container, items) {
+            container.classList.add('measuring');   // 量測時取消 grid 同列等高拉伸
+            items.forEach(it => { it.h = Math.round(it.card.getBoundingClientRect().height); });
+            container.classList.remove('measuring');
+            items.sort((a, b) => (b.pinned - a.pinned) || (a.h - b.h) || byContent(a.cmd, b.cmd));
+            items.forEach(it => container.appendChild(it.card));
+        }
+
+        // 視窗寬度改變會影響換行與高度，寬度變動後重新排序
+        let lastGridWidth = 0, resizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                const w = document.getElementById('container').clientWidth;
+                if (w !== lastGridWidth) { lastGridWidth = w; renderCards(); }
+            }, 150);
+        });
+
         function toggleTagSort(tag) {
             activeTag = activeTag === tag ? null : tag;
             renderCards();
@@ -52,6 +72,7 @@
 
         function renderCards() {
             container.innerHTML = '';
+            const items = [];
             getSortedCommands().forEach(cmd => {
                 const card = document.createElement('div');
                 card.className = 'item-card';
@@ -85,7 +106,10 @@
                 card.appendChild(label);
                 card.appendChild(pre);
                 container.appendChild(card);
+                items.push({ card, cmd, pinned: activeTag && (cmd.tags || []).includes(activeTag) ? 1 : 0 });
             });
+            sortCardsByHeight(container, items);
+            lastGridWidth = container.clientWidth;
         }
 
         renderCards();
@@ -171,6 +195,7 @@
     @media (max-width: 768px) {
         .grid-container { grid-template-columns: 1fr; }
     }
+    .grid-container.measuring { align-items: start; }
     .item-card {
         background-color: var(--item-bg);
         border: 1px solid var(--border);

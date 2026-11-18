@@ -184,6 +184,8 @@
             margin-bottom: 40px;
         }
 
+        .grid-container.measuring { align-items: start; }
+
         @media (max-width: 768px) {
             .grid-container {
                 grid-template-columns: 1fr;
@@ -550,7 +552,8 @@
         let currentEditIndex = -1;
         let fileHandle = null;
 
-        // 排序規則與 index.html 相同：指令內容由短到長，長度相同時依標題
+        // 次要排序（與 index.html 相同）：指令內容由短到長，長度相同時依標題
+        // 畫面上的主要排序為卡片高度，見 sortCardsByHeight；commands.js 存檔順序仍依此規則
         function byContent(a, b) {
             return (a.code || '').length - (b.code || '').length
                 || (a.title || '').localeCompare(b.title || '', 'zh-Hant-TW');
@@ -636,6 +639,26 @@
             }
         });
 
+        // 依卡片實際顯示高度排序：pinned（含目前標籤）排最前面，同組內由矮到高，
+        // 高度相同時沿用 byContent（內容長度 → 標題）
+        function sortCardsByHeight(container, items) {
+            container.classList.add('measuring');   // 量測時取消 grid 同列等高拉伸
+            items.forEach(it => { it.h = Math.round(it.card.getBoundingClientRect().height); });
+            container.classList.remove('measuring');
+            items.sort((a, b) => (b.pinned - a.pinned) || (a.h - b.h) || byContent(a.cmd, b.cmd));
+            items.forEach(it => container.appendChild(it.card));
+        }
+
+        // 視窗寬度改變會影響換行與高度，寬度變動後重新排序
+        let lastGridWidth = 0, resizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                const w = document.getElementById('cardsContainer').clientWidth;
+                if (w !== lastGridWidth) { lastGridWidth = w; renderCommands(document.getElementById('searchInput').value); }
+            }, 150);
+        });
+
         // 點卡片上的標籤切換排序；再點一次恢復預設排序
         function toggleTagSort(tag) {
             activeTag = activeTag === tag ? null : tag;
@@ -650,6 +673,7 @@
 
             const kw = filterKeyword.trim().toLowerCase();
             let visibleCount = 0;
+            const items = [];
 
             // 排序與 index.html 相同：先依內容由短到長，點選標籤時含該標籤的指令排在最前面
             // (保留原始索引供編輯／刪除使用)
@@ -724,7 +748,10 @@
                 }
                 card.appendChild(pre);
                 container.appendChild(card);
+                items.push({ card, cmd, pinned: activeTag && tags.includes(activeTag) ? 1 : 0 });
             });
+            sortCardsByHeight(container, items);
+            lastGridWidth = container.clientWidth;
 
             const countText = `共 ${commands.length} 個指令` + (kw ? ` (篩選出 ${visibleCount} 個)` : '');
             if (document.getElementById('commandCountInfo')) document.getElementById('commandCountInfo').innerText = countText;
