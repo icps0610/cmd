@@ -112,7 +112,14 @@
             lastGridWidth = container.clientWidth;
         }
 
-        renderCards();
+        // <style> 位於 </body> 之後，需等整份文件解析完（樣式已套用）才能量到正確高度；
+        // 字型載入完成後再排一次，避免字寬變動造成誤差
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', renderCards);
+        } else {
+            renderCards();
+        }
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderCards);
 
         function copyCode(pre, code) {
             // 使用者正在反白選取文字時不觸發複製
